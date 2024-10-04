@@ -4,12 +4,9 @@ import styles from "./style.module.scss";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,

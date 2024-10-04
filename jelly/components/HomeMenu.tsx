@@ -6,7 +6,6 @@ import Link from 'next/link';
 import HomeCard from "./HomeCard"
 // import Image from "next/image"
 import { useRouter } from 'next/navigation';
-import GameModel from './GameModel';
 // import { create } from 'domain';
 
 const HomeMenu = () => {

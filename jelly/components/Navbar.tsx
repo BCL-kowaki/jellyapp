@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import MobileNav from './MobileNav'
-import { SignIn, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { SignedIn, UserButton } from '@clerk/nextjs'
 // import { User } from 'lucide-react'
 
 const Navbar = () => {

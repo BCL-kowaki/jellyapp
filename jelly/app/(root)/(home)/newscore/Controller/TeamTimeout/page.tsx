@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import styles from "./style.module.scss";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import {

@@ -1,16 +1,11 @@
 "use client"
 
 import * as React from "react"
-import styles from "./style.module.scss";
-import Image from "next/image"
-import Link from "next/link"
-import { TrendingUp } from "lucide-react"
 import TeamMember from "./TeamMember/page";
 import TeamFoul from "./TeamFoul/page";
 import TeamTimeout from "./TeamTimeout/page";
 import TotalScore from "./TotalScore/page";
 import QScore from "./QScore/page";
-import Counter from "./SelectDate/Counter/page";
 import SelectDate from "./SelectDate/page";
 
 const Controller = () => {
