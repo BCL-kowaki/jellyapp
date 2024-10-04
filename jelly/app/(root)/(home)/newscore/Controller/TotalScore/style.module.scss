@@ -1,0 +1,32 @@
+.scoreCardInner{
+  width: 90%;
+  margin: 0 auto;
+  padding: 20px 0;
+  color: #fff;
+}
+.scoreTitle{
+  font-size: 16px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+.scoreFlex{
+  display: flex;
+  justify-content: space-between;
+  padding: 50px 0 20px 0;
+}
+
+.scoreToral{
+  font-size: 120px;
+  font-weight: 900;
+}
+.teamName{
+  font-size: 16px;
+  font-weight: 900;
+}
+.scoreBorder{
+  font-size: 60px;
+  font-weight: 900;
+  position: relative;
+  top: 40px;
+}
+

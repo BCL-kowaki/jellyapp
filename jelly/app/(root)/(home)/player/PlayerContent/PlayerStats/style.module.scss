@@ -1,0 +1,48 @@
+.statsContainer {
+  font-family: Arial, sans-serif;
+  margin: 20px auto 40px;
+}
+.statsTable {
+  width: 100%;
+  background: #fff;
+  border-collapse: collapse;  // これを table に移動
+  tbody {
+    tr {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    td {
+      width: calc(100% / 4);
+      text-align: center;
+      border: 1px solid #e0e0e0;
+    }
+  }
+}
+
+
+.statsBox {
+  width: 100%;
+  padding: 20px 0;
+  color: #333;
+  
+  &__label1 {
+    font-size: 12px;
+    font-weight: 900;
+  }
+  
+  &__value {
+    font-size: 12px;
+    font-weight: 900;
+    margin: 10px 0 12px 0;
+
+    span {
+      font-size: 18px;
+    }
+  }
+
+  &__label2 {
+    font-size: 10px;
+    color: #666;
+  }
+}

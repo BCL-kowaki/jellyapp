@@ -1,0 +1,94 @@
+.topContent{ 
+  max-width: 90%;
+  width: 90%;
+  margin: 0 auto;
+  color: #fff;
+  border-bottom: 1px solid #999999;
+
+    &__inner{
+    padding: 25px 0 12px 0;
+    display: flex;
+    justify-content: flex-start;
+
+    &__img{
+    width: 150px;
+    height: 150px;
+    border-radius: 150px;
+    background: #000;
+    margin: 0 100px 0 0;
+    }
+
+        &__smy{
+        width: 80%;
+
+          &__team{
+          font-size: 20px;
+          margin: 20px 0;
+          }
+
+          &__data{
+
+
+              &__flex{
+              display: flex;
+              justify-content: flex-start;
+              margin-bottom: 20px;
+
+                  &__wl{
+                      p{
+                      font-size: 12px;
+                      font-weight: 900;
+                      }
+
+                      span{
+                      font-size: 24px;
+                      margin: auto 3px;
+                      }
+                  }
+
+                  &__category{
+                  font-size: 12px;
+                  padding: 0 40px;
+                  position: relative;
+                  bottom: 0;
+
+                    p{
+                    font-size: 12px;
+                    position: relative;
+                    top: 10px;
+                    }
+                  }
+              }
+
+                &__border{
+                width: 100%;
+                background: #cccccc;
+                height: 1px;
+                }
+
+                &__flexSmy{
+                display: flex;
+                justify-content: space-between;
+                margin: 20px auto;
+
+                        dl{ 
+                        display: flex;
+                        justify-content: flex-start;
+
+                                dt{
+                                font-size: 12px;
+                                margin-right: 10px;
+                                position: relative;
+                                top: 5px;
+                                }
+
+                                dd{
+                                font-size: 18px;
+                                font-weight: 900;
+                                }
+                        }
+                }
+          }
+        }
+    }
+}

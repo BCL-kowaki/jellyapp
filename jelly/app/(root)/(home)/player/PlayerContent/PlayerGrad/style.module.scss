@@ -1,0 +1,38 @@
+
+.gradTable{
+
+    font-size: 12px;
+    margin: 20px auto 40px;
+
+  table{
+      width: 100%;
+      border-collapse:separate;
+      border-spacing: 0;
+      
+      th{
+        color:#fff;
+        text-align: center;
+        background: #333333;
+        padding: 10px 5px;
+
+      }
+      
+      td {
+        text-align: center;
+        border-top: none;
+        padding: 10px 5px;
+        vertical-align: middle;
+      }
+    
+      tr {
+        color: #333;
+        background: #fff;
+    
+        &:nth-child(odd) td {
+          background: #dfdede;
+        }
+      }
+
+  }
+  
+}  

@@ -1,0 +1,88 @@
+.topContent {
+  max-width: 90%;
+  width: 90%;
+  margin: 0 auto;
+  color: #fff;
+  border-bottom: 1px solid #999999;
+}
+
+.topContent__inner {
+  padding: 25px 0 12px 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.topContent__inner__img {
+  width: 150px;
+  height: 150px;
+  border-radius: 150px;
+  background: #000;
+  margin: 0 100px 0 0;
+}
+
+.topContent__inner__smy {
+  width: 80%;
+}
+
+.topContent__inner__smy__team {
+  font-size: 20px;
+  margin: 20px 0;
+}
+
+.topContent__inner__smy__data__flex {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+}
+
+.topContent__inner__smy__data__flex__wl p {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.topContent__inner__smy__data__flex__wl span {
+  font-size: 24px;
+  margin: auto 3px;
+}
+
+.topContent__inner__smy__data__flex__category {
+  font-size: 12px;
+  padding: 0 40px;
+  position: relative;
+  bottom: 0;
+}
+
+.topContent__inner__smy__data__flex__category p {
+  font-size: 12px;
+  position: relative;
+  top: 10px;
+}
+
+.topContent__inner__smy__data__border {
+  width: 100%;
+  background: #cccccc;
+  height: 1px;
+}
+
+.topContent__inner__smy__data__flexSmy {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px auto;
+}
+
+.topContent__inner__smy__data__flexSmy dl {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.topContent__inner__smy__data__flexSmy dl dt {
+  font-size: 12px;
+  margin-right: 10px;
+  position: relative;
+  top: 5px;
+}
+
+.topContent__inner__smy__data__flexSmy dl dd {
+  font-size: 18px;
+  font-weight: 900;
+}

@@ -1,0 +1,84 @@
+.gamerecord{
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 0;
+  font-family: Arial, sans-serif;
+
+  &__inner {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+  
+      h1 {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 10px;
+      }
+  
+      &__flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+  
+        dl {
+          margin: 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+  
+          dd {
+            display: flex;
+            align-items: center;
+            margin: 0 20px 0 0;
+            font-size: 16px;
+            line-height: 1.5;
+  
+            &:first-child {
+              margin-bottom: 5px;
+            }
+  
+            span {
+              margin: 0 5px;
+  
+              &:first-child {
+                font-weight: bold;
+                color: #666;
+              }
+            }
+  
+            a {
+              color: #0066cc;
+              text-decoration: none;
+              font-weight: bold;
+  
+              &:hover {
+                text-decoration: underline;
+              }
+            }
+          }
+        }
+  
+        div {
+          a {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #fff;
+            color: #0066cc;
+            border: 1px solid #0066cc;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 12px;
+            transition: background-color 0.3s, color 0.3s;
+  
+            &:hover {
+              background-color: #0066cc;
+              color: #fff;
+            }
+          }
+        }
+      }
+    }
+  }
+  
