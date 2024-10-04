@@ -5,11 +5,11 @@ import Link from 'next/link';
 // import { Home } from "lucide-react"
 import HomeCard from "./HomeCard"
 // import Image from "next/image"
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 // import { create } from 'domain';
 
 const HomeMenu = () => {
-  const router = useRouter();
+  // const router = useRouter();
   const [meetingState, setMeetingState] = useState<'isScheduleMeeting' | 'isJoiningMeeting' | 'isInstantMeeting' | undefined >(undefined);
 
   // const createMeeting = () => {
