@@ -9,36 +9,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-  import {
-    ChartConfig,
-    ChartContainer,
-    ChartTooltip,
-    ChartTooltipContent,
-  } from "@/components/ui/chart"
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 
-  const chartConfig = {
-    teamA: {
-      label: "teamA",
-      color: "hsl(var(--chart-1))",
-    },
-    teamB: {
-      label: "teamB",
-      color: "hsl(var(--chart-2))",
-    },
-  } satisfies ChartConfig  
+const chartConfig = {
+  teamA: {
+    label: "teamA",
+    color: "hsl(var(--chart-1))",
+  },
+  teamB: {
+    label: "teamB",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig  
 
-  export const description = "A multiple bar chart"
-  const chartData = [
-    { month: "first", teamA: 2, teamB: 5 },
-    { month: "second", teamA: 3, teamB: 4 },
-    { month: "third", teamA: 5, teamB: 5 },
-    { month: "fourth", teamA: 5, teamB: 5 },
-  ]
+// export const description = "A multiple bar chart"
+const chartData = [
+  { month: "first", teamA: 2, teamB: 5 },
+  { month: "second", teamA: 3, teamB: 4 },
+  { month: "third", teamA: 5, teamB: 5 },
+  { month: "fourth", teamA: 5, teamB: 5 },
+]
 
-  const TeamFoul = () => {
+const TeamFoul = () => {
     return (
-    <>
-
 <Card>
       <CardHeader>
         <CardTitle>チームファール</CardTitle>
@@ -64,8 +62,6 @@ import {
         </ChartContainer>
       </CardContent>
     </Card>
-
-    </>
     );
   }
   

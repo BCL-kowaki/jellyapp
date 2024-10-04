@@ -27,7 +27,6 @@ import {
     },
   } satisfies ChartConfig  
 
-  export const description = "A multiple bar chart"
   const chartData = [
     { month: "first", teamA: 0, teamB: 0 },
     { month: "second", teamA: 1, teamB: 2 },
@@ -37,8 +36,6 @@ import {
 
   const TeamTimeout = () => {
     return (
-    <>
-
 <Card>
       <CardHeader>
         <CardTitle>タイムアウト</CardTitle>
@@ -64,8 +61,6 @@ import {
         </ChartContainer>
       </CardContent>
     </Card>
-
-    </>
     );
   }
   

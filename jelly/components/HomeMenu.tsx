@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+// import { useState } from 'react';
 import Link from 'next/link';
 // import { Home } from "lucide-react"
 import HomeCard from "./HomeCard"
@@ -10,7 +10,7 @@ import HomeCard from "./HomeCard"
 
 const HomeMenu = () => {
   // const router = useRouter();
-  const [meetingState, setMeetingState] = useState<'isScheduleMeeting' | 'isJoiningMeeting' | 'isInstantMeeting' | undefined >(undefined);
+  // const [meetingState, setMeetingState] = useState<'isScheduleMeeting' | 'isJoiningMeeting' | 'isInstantMeeting' | undefined >(undefined);
 
   // const createMeeting = () => {
   //   router.push('/meeting/123');
@@ -23,7 +23,7 @@ const HomeMenu = () => {
       img="/icons/add-meeting.svg"
       title="新規試合"
       description="新しい試合を開始する"
-      handleClick={() => setMeetingState('isJoiningMeeting')}
+      // handleClick={() => setMeetingState('isJoiningMeeting')}
       className="bg-orange-1"
       />
       </Link>
@@ -32,7 +32,7 @@ const HomeMenu = () => {
       img="/icons/schedule.svg"
       title="試合予定"
       description="今後の試合を計画する"
-      handleClick={() => setMeetingState('isScheduleMeeting')}
+      // handleClick={() => setMeetingState('isScheduleMeeting')}
       className="bg-blue-1"
       />
 
@@ -40,7 +40,7 @@ const HomeMenu = () => {
       img="/icons/recordings.svg"
       title="チーム登録"
       description="新しいチームを登録する"
-      handleClick={() => setMeetingState('isJoiningMeeting')}
+      // handleClick={() => setMeetingState('isJoiningMeeting')}
       className="bg-purple-1"
       />
 
@@ -48,7 +48,7 @@ const HomeMenu = () => {
       img="/icons/join-meeting.svg"
       title="プレイヤー登録"
       description="新しいプレイヤーを登録する"
-      handleClick={() => setMeetingState('isJoiningMeeting')}
+      // handleClick={() => setMeetingState('isJoiningMeeting')}
       className="bg-yellow-1"
       />
 

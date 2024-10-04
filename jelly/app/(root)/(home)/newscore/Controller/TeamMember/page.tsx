@@ -24,8 +24,6 @@ import {
 
   const TeamMember = () => {
     return (
-    <>
-
   <Tabs defaultValue="week">
   <Card x-chunk="dashboard-05-chunk-3">
     <CardHeader className="px-7">
@@ -195,8 +193,6 @@ import {
     </CardContent>
   </Card>
 </Tabs>
-
-</>
   );
 }
 export default TeamMember

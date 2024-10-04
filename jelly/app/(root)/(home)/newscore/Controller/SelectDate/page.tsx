@@ -16,10 +16,7 @@ import {
 } from "@/components/ui/select"
 import Counter from "./Counter/page"
 
-export const description =
-  "A product edit page. The product edit page has a form to edit the product details, stock, product category, product status, and product images. The product edit page has a sidebar navigation and a main content area. The main content area has a form to edit the product details, stock, product category, product status, and product images. The sidebar navigation has links to product details, stock, product category, product status, and product images."
-
-export function SelectDate() {
+function SelectDate() {
   return (
 
     <Card x-chunk="dashboard-07-chunk-2">
@@ -69,9 +66,9 @@ export function SelectDate() {
               <SelectValue placeholder="カテゴリー" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="得点｜2P">得点｜2P</SelectItem>
-              <SelectItem value="得点｜3P">得点｜3P</SelectItem>
-              <SelectItem value="得点｜FT">得点｜FT</SelectItem>
+              <SelectItem value="得点_2P">得点_2P</SelectItem>
+              <SelectItem value="得点_3P">得点_3P</SelectItem>
+              <SelectItem value="得点_FT">得点_FT</SelectItem>
               <SelectItem value="ファール">ファール</SelectItem>
               <SelectItem value="タイムアウト">タイムアウト</SelectItem>
             </SelectContent>

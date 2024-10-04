@@ -3,55 +3,11 @@ import { Minus, Plus } from "lucide-react"
 import styles from "./style.module.scss";
 import { Button } from "@/components/ui/button"
 
-// const data = [
-//   {
-//     goal: 400,
-//   },
-//   {
-//     goal: 300,
-//   },
-//   {
-//     goal: 200,
-//   },
-//   {
-//     goal: 300,
-//   },
-//   {
-//     goal: 200,
-//   },
-//   {
-//     goal: 278,
-//   },
-//   {
-//     goal: 189,
-//   },
-//   {
-//     goal: 239,
-//   },
-//   {
-//     goal: 300,
-//   },
-//   {
-//     goal: 200,
-//   },
-//   {
-//     goal: 278,
-//   },
-//   {
-//     goal: 189,
-//   },
-//   {
-//     goal: 349,
-//   },
-// ]
-
-export function Counter() {
+function Counter() {
   const [goal, setGoal] = React.useState(2)
-
   function onClick(adjustment: number) {
     setGoal(Math.max(0, Math.min(4, goal + adjustment)))
   }
-
   return (
         <div className="mx-auto w-full max-w-sm">
           <div className="pb-0">

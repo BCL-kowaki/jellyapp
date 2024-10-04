@@ -5,9 +5,6 @@ import {
   Card,
 } from "@/components//ui/card"
 
-export const description = "A collection of health charts."
-
-
 const TotalScore = () => {
   return (
       <Card>
