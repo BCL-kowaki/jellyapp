@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link';
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
@@ -105,7 +106,9 @@ export default function SearchScore() {
           const teamB = teams.find(team => team.id === game.teamBId)
 
           return (
+
             <Card key={game.id} className="bg-gray-700">
+              <Link href="/NewScore">
               <CardContent className="p-4 flex justify-between items-center">
                 <div>
                   <p className="text-gray-300">GameId : {game.id}</p>
@@ -115,6 +118,8 @@ export default function SearchScore() {
                 </div>
                 <p className="text-gray-300 mt-7">{game.date}</p>
               </CardContent>
+
+            </Link>
             </Card>
           )
         })}

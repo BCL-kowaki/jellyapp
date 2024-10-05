@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link';
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
@@ -71,12 +72,16 @@ export default function SearchTeam() {
         <div className="text-red-500 mb-4">{error}</div>
       )}
       <div className="space-y-4">
+
         {filteredTeams.map(team => (
           <Card key={team.id}>
+          <Link href="/Team">
             <CardContent className="p-4">
               <p className="text-gray-400">TeamId : {team.id}</p>
               <h2 className="text-xl font-semibold mt-1 text-white">{team.teamName}</h2>
             </CardContent>
+
+      </Link>
           </Card>
         ))}
       </div>

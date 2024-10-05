@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link';
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
@@ -102,6 +103,7 @@ export default function SearchPlayer() {
 
           return (
             <Card key={player.id} className="bg-gray-700">
+            <Link href="/Player">
               <CardContent className="p-4">
                 <p className="text-gray-300">PlayerId : {player.id}</p>
                 <div className='flex justify-between'>
@@ -111,6 +113,7 @@ export default function SearchPlayer() {
                   <p className="flex-1 w-5 text-right text-gray-300 mt-4">所属：{team?.teamName}</p>
                 </div>
               </CardContent>
+            </Link>
             </Card>
           )
         })}
