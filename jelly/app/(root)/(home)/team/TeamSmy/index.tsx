@@ -22,7 +22,7 @@ const TeamSmy = () => {
           <div className={styles.topContent__inner__smy__data}>
             <div className={styles.topContent__inner__smy__data__flex}>
             <div className={styles.topContent__inner__smy__data__flex__wl}>
-              <p><span>12</span>勝<span>2</span>敗</p>
+              <p><span>14</span>勝<span>2</span>敗</p>
             </div>
             <div className={styles.topContent__inner__smy__data__flex__category}>
               <p><span>U-18</span>｜<span>2024</span></p>
