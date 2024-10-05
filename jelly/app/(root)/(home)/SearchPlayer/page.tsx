@@ -1,9 +1,10 @@
 'use client'
-import axios from 'axios'
+
 import { useState, useEffect } from 'react'
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
+import { createClient } from '@supabase/supabase-js'
 
 interface Player {
   id: string;
@@ -16,20 +17,35 @@ interface Team {
   teamName: string;
 }
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
 export default function SearchPlayer() {
   const [searchTerm, setSearchTerm] = useState('')
   const [players, setPlayers] = useState<Player[]>([])
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch players from API
     const fetchPlayers = async () => {
       try {
-        const response = await axios.get('http://localhost:8888/api/auth/player') // Replace with your actual API endpoint
-        setPlayers(response.data)
+        const { data, error } = await supabase
+          .from('Player')
+          .select('*')
+
+        if (error) throw error
+
+        setPlayers(data || [])
       } catch (error) {
-        console.error(error)
+        console.error('Error fetching players:', error)
+        setError('選手データの取得中にエラーが発生しました。')
       }
     }
 
@@ -37,13 +53,18 @@ export default function SearchPlayer() {
   }, [])
 
   useEffect(() => {
-    // Fetch teams from API
     const fetchTeams = async () => {
       try {
-        const response = await axios.get('http://localhost:8888/api/auth/team') // Replace with your actual API endpoint
-        setTeams(response.data)
+        const { data, error } = await supabase
+          .from('Team')
+          .select('*')
+
+        if (error) throw error
+
+        setTeams(data || [])
       } catch (error) {
-        console.error(error)
+        console.error('Error fetching teams:', error)
+        setError('チームデータの取得中にエラーが発生しました。')
       }
     }
 
@@ -72,6 +93,9 @@ export default function SearchPlayer() {
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       </div>
+      {error && (
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
       <div className="space-y-4">
         {filteredPlayers.map(player => {
           const team = teams.find(team => team.id === player.teamId)
@@ -83,9 +107,7 @@ export default function SearchPlayer() {
                 <div className='flex justify-between'>
                   <div className='flex-1 w-80 flex justify-start'>
                     <h2 className="flex-1 w-5 text-3xl font-semibold mt-1 text-white">{player.name}</h2>
-                    {/* {player.nameKana && <p className="flex-1 w-5 mt-4 text-gray-300">{player.nameKana}</p>} */}
                   </div>
-
                   <p className="flex-1 w-5 text-right text-gray-300 mt-4">所属：{team?.teamName}</p>
                 </div>
               </CardContent>

@@ -118,7 +118,7 @@ app.get("/api/auth/team", async (req, res) => {
 
 // 新規プレイヤーAPI
 app.post("/api/auth/player/register", async (req, res) => {
-  const { No, name, position, images, category, height, teamId } = req.body;
+  const { No, name, position, image, category, height, teamId } = req.body;
 
   if (!name) {
     return res.status(400).json({
@@ -132,7 +132,7 @@ app.post("/api/auth/player/register", async (req, res) => {
         No,
         name,
         position,
-        images,
+        image,
         category,
         height,
         teamId,

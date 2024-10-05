@@ -1,28 +1,45 @@
 'use client'
-import axios from 'axios'
+
 import { useState, useEffect } from 'react'
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Search } from "lucide-react"
+import { createClient } from '@supabase/supabase-js'
 
 interface Team {
   id: string;
   teamName: string;
 }
 
+// Supabaseクライアントの初期化
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables')
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
 export default function SearchTeam() {
   const [searchTerm, setSearchTerm] = useState('')
   const [teams, setTeams] = useState<Team[]>([])
   const [filteredTeams, setFilteredTeams] = useState<Team[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch teams from API
     const fetchTeams = async () => {
       try {
-        const response = await axios.get('http://localhost:8888/api/auth/team') // Replace with your actual API endpoint
-        setTeams(response.data)
+        const { data, error } = await supabase
+          .from('Team')
+          .select('id, teamName')
+
+        if (error) throw error
+
+        setTeams(data || [])
       } catch (error) {
-        console.error(error)
+        console.error('Error fetching teams:', error)
+        setError('チームの取得中にエラーが発生しました。')
       }
     }
 
@@ -32,7 +49,7 @@ export default function SearchTeam() {
   useEffect(() => {
     const filtered = teams.filter(team => 
       team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.id.includes(searchTerm)
+      team.id.toLowerCase().includes(searchTerm.toLowerCase())
     )
     setFilteredTeams(filtered)
   }, [searchTerm, teams])
@@ -50,6 +67,9 @@ export default function SearchTeam() {
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
       </div>
+      {error && (
+        <div className="text-red-500 mb-4">{error}</div>
+      )}
       <div className="space-y-4">
         {filteredTeams.map(team => (
           <Card key={team.id}>

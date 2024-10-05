@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, ChangeEvent, FormEvent } from 'react'
-import axios from 'axios';
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { createTeam } from './actions'
 
 interface FormData {
   teamName: string;
@@ -20,11 +21,13 @@ interface FormData {
 }
 
 export default function NewTeam() {
+  const router = useRouter()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     teamName: '',
     category: 'U-12',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -48,13 +51,31 @@ export default function NewTeam() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log(formData)
-    console.log('Image:', imagePreview)
+    setIsSubmitting(true)
+
     try {
-      const response = await axios.post('/api/teams', formData)
-      console.log(response.data)
+      const form = new FormData()
+      form.append('teamName', formData.teamName)
+      form.append('category', formData.category)
+      if (imagePreview) {
+        const response = await fetch(imagePreview)
+        const blob = await response.blob()
+        form.append('image', blob, 'image.jpg')
+      }
+      
+      const result = await createTeam(form)
+      if (result.success) {
+        router.push('/SearchTeam')
+      } else {
+        console.error('チーム作成エラー:', result.error)
+        // エラーメッセージを表示するなどの処理を行う
+        alert('チームの作成に失敗しました: ' + result.error)
+      }
     } catch (error) {
-      console.error(error)
+      console.error('送信エラー:', error)
+      alert('送信中にエラーが発生しました')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -108,8 +129,8 @@ export default function NewTeam() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-          登録
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+          {isSubmitting ? '登録中...' : '登録'}
         </Button>
       </form>
     </div>
