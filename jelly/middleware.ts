@@ -1,4 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+//const isDashboardRoute = createRouteMatcher(['/dashboard(.)']);
+//const isAdminRoute = createRouteMatcher(['/admin(.)']);
+const isPublicRoute = createRouteMatcher(['/','/sign-in(.)', '/sign-up(.)']);
+//you need achieve clerkMiddleware interface in the middleware.d.ts file
 
 const protectedRoutes = createRouteMatcher([
   '/',
@@ -11,7 +15,7 @@ const protectedRoutes = createRouteMatcher([
 
 export default clerkMiddleware((auth, req) => {
   if(protectedRoutes(req)) auth().protect()
-})
+},)
 
 export const config = {
   matcher: [

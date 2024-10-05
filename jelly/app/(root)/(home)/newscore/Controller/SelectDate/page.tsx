@@ -23,6 +23,7 @@ function SelectDate() {
     <CardHeader>
       <CardTitle>スコア</CardTitle>
     </CardHeader>
+    <form>
     <CardContent className={styles.scoreFlex}>
       <div className={styles.scoreFlexGred}>
       <div className="grid gap-6 sm:grid-cols-2">
@@ -97,6 +98,7 @@ function SelectDate() {
         <Counter />
       </div>
     </CardContent>
+    </form>
   </Card>
   )
 }

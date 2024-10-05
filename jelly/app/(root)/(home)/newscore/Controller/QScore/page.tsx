@@ -16,8 +16,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { team: "January", first: 20, second: 18, third: 17, fourth: 21 },
-  { team: "February", first: 19, second: 27, third: 21, fourth: 18 },
+  { team: "January", first: 17, second: 12, third: 24, fourth: 11 },
+  { team: "February", first: 13, second: 14, third: 11, fourth: 16 },
 ]
 const chartConfig = {
   first: {

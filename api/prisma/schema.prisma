@@ -8,36 +8,70 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+
 model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   email    String @unique
-  phone    String @unique
   password String
 }
 
+
 model Team {
   id          Int      @id @default(autoincrement())
-  teamName    String
-  Affiliation String
+  teamName    String?
+  images      String?
+  category    String?
   createdAt   DateTime @default(now())
   Player      Player[]
+  scores    Score[]  @relation("TeamToScore")
+  gamesA    Game[]   @relation("TeamAToGame")
+  gamesB    Game[]   @relation("TeamBToGame")
 }
+
 
 model Player {
   id          Int      @id @default(autoincrement())
-  No          String   @unique
+  No          String  
   name        String
-  position    String
-  Affiliation String
-  height      String
+  position    String?
+  images      String?
+  category    String?
+  height      String?
   teamId      Int
   team        Team     @relation(fields: [teamId], references: [id])
-  teamName    String
   createdAt   DateTime @default(now())
+  scores    Score[]  @relation("PlayerToScore")
+}
+
+
+model Score {
+  id        Int      @id @default(autoincrement())
+  gameId    Int      @default(1)
+  game      Game     @relation("ScoreToGame", fields: [gameId], references: [id])
+  quarter   String
+  teamId    Int
+  team      Team     @relation("TeamToScore", fields: [teamId], references: [id])
+  kinds     String
+  playerId  Int
+  player    Player   @relation("PlayerToScore", fields: [playerId], references: [id])
+  point     String
+  createdAt DateTime @default(now())
+}
+
+
+model Game {
+  id        Int      @id @default(autoincrement())
+  teamAId   Int
+  teamA     Team     @relation("TeamAToGame", fields: [teamAId], references: [id])
+  teamBId   Int
+  teamB     Team     @relation("TeamBToGame", fields: [teamBId], references: [id])
+  createdAt DateTime @default(now())
+  scores    Score[]  @relation("ScoreToGame")
 }

@@ -6,22 +6,22 @@ export const sideberLinks = [
     },
     {
         label: 'Team',
-        route: '/team',
+        route: '/SearchTeam',
         imgUrl: '/icons/upcoming.svg',
     },
     {
         label: 'Player',
-        route: '/player',
+        route: '/SearchPlayer',
         imgUrl: '/icons/previous.svg',
     },
     {
         label: 'Score',
-        route: '/score',
+        route: '/SearchScore',
         imgUrl: '/icons/Video.svg',
     },
-    {
-        label: 'Personal Room',
-        route: '/personal-room',
-        imgUrl: '/icons/add-personal.svg',
-    },
+    // {
+    //     label: 'Personal Room',
+    //     route: '/personal-room',
+    //     imgUrl: '/icons/add-personal.svg',
+    // },
 ];

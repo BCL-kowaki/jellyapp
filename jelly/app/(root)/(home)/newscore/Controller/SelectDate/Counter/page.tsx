@@ -38,7 +38,7 @@ function Counter() {
             </div>
           </div>
               <div className="grid grid-cols-2 gap-5 text-center">
-            <Button>クリック</Button>
+              <Button variant="outline">クリック</Button>
               <Button variant="outline">キャンセル</Button>
               </div>
         </div>

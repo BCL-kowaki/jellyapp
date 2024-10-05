@@ -18,7 +18,7 @@ const HomeMenu = () => {
 
   return (
     <section className='grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4'>
-      <Link href="/newscore">
+      <Link href="/AddNewScore">
       <HomeCard 
       img="/icons/add-meeting.svg"
       title="新規試合"
@@ -28,6 +28,7 @@ const HomeMenu = () => {
       />
       </Link>
 
+      <Link href="/ReserveScore">
       <HomeCard 
       img="/icons/schedule.svg"
       title="試合予定"
@@ -35,7 +36,8 @@ const HomeMenu = () => {
       // handleClick={() => setMeetingState('isScheduleMeeting')}
       className="bg-blue-1"
       />
-
+      </Link>
+      <Link href="/NewTeam">
       <HomeCard 
       img="/icons/recordings.svg"
       title="チーム登録"
@@ -43,7 +45,8 @@ const HomeMenu = () => {
       // handleClick={() => setMeetingState('isJoiningMeeting')}
       className="bg-purple-1"
       />
-
+      </Link>
+      <Link href="/NewPlayer">
       <HomeCard 
       img="/icons/join-meeting.svg"
       title="プレイヤー登録"
@@ -51,7 +54,7 @@ const HomeMenu = () => {
       // handleClick={() => setMeetingState('isJoiningMeeting')}
       className="bg-yellow-1"
       />
-
+      </Link>
       {/* <GameModel 
       isOpen={meetingState === 'isInstantMeeting'}
       onClose={() => setMeetingState(undefined)}
