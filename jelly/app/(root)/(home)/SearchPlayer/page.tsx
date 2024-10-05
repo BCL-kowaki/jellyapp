@@ -60,7 +60,7 @@ export default function SearchPlayer() {
   }, [searchTerm, players, teams])
 
   return (
-    <div className="min-h-screen text-white p-8">
+    <div className="min-h-screen text-white p-8 contentInner">
       <h1 className="text-3xl font-bold mb-8">選手検索</h1>
       <div className="relative mb-6">
         <Input

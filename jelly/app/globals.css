@@ -139,6 +139,10 @@
   max-width: 1280px;
 }
 
+.contentInner{
+  max-width: 1080px;
+}
+
 
 @layer base {
   :root {

@@ -60,7 +60,7 @@ export default function SearchScore() {
   }, [searchTerm, games])
 
   return (
-    <div className="min-h-screen text-white p-8">
+    <div className="min-h-screen text-white p-8 contentInner">
       <h1 className="text-3xl font-bold mb-8">試合検索</h1>
       <div className="relative mb-6">
         <Input
