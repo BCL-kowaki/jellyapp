@@ -112,7 +112,7 @@ export default function SearchScore() {
               <CardContent className="p-4 flex justify-between items-center">
                 <div>
                   <p className="text-gray-300">GameId : {game.id}</p>
-                  <h2 className="text-2xl text-white font-semibold mt-1">
+                  <h2 className="text-3xl text-white font-semibold mt-1">
                     {teamA?.teamName} vs {teamB?.teamName}
                   </h2>
                 </div>

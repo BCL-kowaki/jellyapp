@@ -78,7 +78,7 @@ export default function SearchTeam() {
           <Link href="/Team">
             <CardContent className="p-4">
               <p className="text-gray-400">TeamId : {team.id}</p>
-              <h2 className="text-xl font-semibold mt-1 text-white">{team.teamName}</h2>
+              <h2 className="text-3xl font-semibold mt-1 text-white">{team.teamName}</h2>
             </CardContent>
 
       </Link>
