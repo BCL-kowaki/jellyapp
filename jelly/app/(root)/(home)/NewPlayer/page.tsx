@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, ChangeEvent, FormEvent } from 'react'
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,26 +13,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { createPlayer, getTeams } from './actions'
 
 interface FormData {
   name: string;
   category: string;
-  team: string;
   number: string;
   position: string;
   height: string;
+  teamId: string;
+  teamName: string;
+}
+
+interface Team {
+  id: string;
+  teamName: string;
 }
 
 export default function NewPlayer() {
+  const router = useRouter()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>({
     name: '',
     category: 'U-12',
-    team: '',
     number: '',
     position: 'PG',
     height: '',
+    teamId: '',
+    teamName: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [teams, setTeams] = useState<Team[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (formData.teamName) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchTeams(formData.teamName)
+      }, 300)
+
+      return () => clearTimeout(delayDebounceFn)
+    }
+  }, [formData.teamName])
+
+  const fetchTeams = async (search: string) => {
+    try {
+      const result = await getTeams(search)
+      if (result.success && result.data) {
+        setTeams(result.data)
+      } else {
+        console.error('チーム検索エラー:', result.error)
+        setError(result.error || 'チームの検索中にエラーが発生しました')
+      }
+    } catch (error) {
+      console.error('チーム検索エラー:', error)
+      setError('チームの検索中にエラーが発生しました')
+    }
+  }
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -40,6 +78,11 @@ export default function NewPlayer() {
 
   const handleSelectChange = (name: string) => (value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleTeamSelect = (team: Team) => {
+    setFormData(prev => ({ ...prev, teamId: team.id, teamName: team.teamName }))
+    setTeams([])
   }
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -53,19 +96,54 @@ export default function NewPlayer() {
     }
   }
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log(formData)
-    console.log('Image:', imagePreview)
+    setIsSubmitting(true)
+    setError(null)
+  
+    try {
+      const form = new FormData()
+      form.append('name', formData.name)
+      form.append('category', formData.category)
+      form.append('number', formData.number)
+      form.append('position', formData.position)
+      form.append('height', formData.height)
+      form.append('teamId', formData.teamId)
+      if (imagePreview) {
+        const response = await fetch(imagePreview)
+        const blob = await response.blob()
+        form.append('image', blob, 'image.jpg')
+      }
+      
+      const result = await createPlayer(form)
+      if (result.success) {
+        router.push('/SearchPlayer')
+      } else {
+        setError(result.error || 'プレイヤーの作成に失敗しました')
+      }
+    } catch (error) {
+      console.error('送信エラー:', error)
+      setError('送信中にエラーが発生しました')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <div className="min-h-screen text-white p-8">
       <h1 className="text-3xl font-bold mb-8">新規選手登録</h1>
+      {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}
       <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
         <div className="space-y-2">
           <Label htmlFor="name">氏名</Label>
-          <Input id="name" name="name" value={formData.name} onChange={handleInputChange} className="w-full bg-zinc-700 text-white" />
+          <Input 
+            id="name" 
+            name="name" 
+            value={formData.name} 
+            onChange={handleInputChange} 
+            className="w-full bg-zinc-700 text-white" 
+            required
+          />
         </div>
 
         <div className="space-y-2">
@@ -84,13 +162,16 @@ export default function NewPlayer() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="team">チーム</Label>
-          <Input id="team" name="team" value={formData.team} onChange={handleInputChange} className="w-full bg-zinc-700 text-white" placeholder="チーム名で検索" />
-        </div>
-
-        <div className="space-y-2">
           <Label htmlFor="number">背番号</Label>
-          <Input id="number" name="number" type="number" value={formData.number} onChange={handleInputChange} className="w-full bg-zinc-700 text-white" />
+          <Input 
+            id="number" 
+            name="number" 
+            type="number" 
+            value={formData.number} 
+            onChange={handleInputChange} 
+            className="w-full bg-zinc-700 text-white" 
+            required
+          />
         </div>
 
         <div className="space-y-2">
@@ -111,11 +192,48 @@ export default function NewPlayer() {
 
         <div className="space-y-2">
           <Label htmlFor="height">身長</Label>
-          <Input id="height" name="height" type="number" value={formData.height} onChange={handleInputChange} className="w-full bg-zinc-700 text-white" placeholder="cm" />
+          <Input 
+            id="height" 
+            name="height" 
+            type="number" 
+            value={formData.height} 
+            onChange={handleInputChange} 
+            className="w-full bg-zinc-700 text-white" 
+            placeholder="cm"
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="image">プロフィール画像をアップしてください</Label>
+          <Label htmlFor="teamName">チーム名</Label>
+          <div className="relative">
+            <Input 
+              id="teamName" 
+              name="teamName" 
+              value={formData.teamName} 
+              onChange={handleInputChange} 
+              className="w-full bg-zinc-700 text-white" 
+              placeholder="チーム名を入力"
+              required
+            />
+            {teams.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-zinc-800 rounded-md shadow-lg">
+                {teams.map((team) => (
+                  <div
+                    key={team.id}
+                    className="px-4 py-2 cursor-pointer hover:bg-zinc-700"
+                    onClick={() => handleTeamSelect(team)}
+                  >
+                    {team.teamName}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="image">プロフィール画像をアップロードしてください</Label>
           <div className="flex items-center justify-center w-full">
             <label htmlFor="image" className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-600">
               {imagePreview ? (
@@ -134,10 +252,14 @@ export default function NewPlayer() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-          送信
+        <Button 
+          type="submit" 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? '登録中...' : '登録'}
         </Button>
       </form>
     </div>
-  );
+  )
 }
