@@ -168,7 +168,7 @@ app.get("/api/auth/player", async (req, res) => {
 
 // 新規スコアAPI
 app.post("/api/auth/score/register", async (req, res) => {
-  const { gameId, quarter, team, kinds, player, point } = req.body;
+  const { gameId, teamId, quarter, kinds, playerId, point } = req.body;
 
   if (!quarter) {
     return res.status(400).json({
@@ -179,21 +179,21 @@ app.post("/api/auth/score/register", async (req, res) => {
   try {
     const score = await prisma.score.create({
       data: {
-        gameId: {
+        game: {
           connect: {
             id: parseInt(gameId),
           },
         },
-        quarter,
         team: {
           connect: {
-            id: parseInt(team),
+            id: parseInt(teamId),
           },
         },
+        quarter,
         kinds,
         player: {
           connect: {
-            id: parseInt(player),
+            id: parseInt(playerId),
           },
         },
         point,
@@ -229,9 +229,9 @@ app.get("/api/auth/score", async (req, res) => {
 
 // 新規ゲームAPI
 app.post("/api/auth/game/register", async (req, res) => {
-  const { teamA, teamB, } = req.body;
+  const { teamAId, teamBId, } = req.body;
 
-  if (!teamA || !teamB) {
+  if (!teamAId || !teamBId) {
     return res.status(400).json({
       message: "チームAとチームBは必須項目です！",
     });
@@ -242,12 +242,12 @@ app.post("/api/auth/game/register", async (req, res) => {
       data: {
         teamA: {
           connect: {
-            id: parseInt(teamA),
+            id: parseInt(teamAId),
           },
         },
         teamB: {
           connect: {
-            id: parseInt(teamB),
+            id: parseInt(teamBId),
           },
         },
       },

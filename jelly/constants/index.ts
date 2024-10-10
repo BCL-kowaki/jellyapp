@@ -19,9 +19,9 @@ export const sideberLinks = [
         route: '/SearchScore',
         imgUrl: '/icons/Video.svg',
     },
-    // {
-    //     label: 'Personal Room',
-    //     route: '/personal-room',
-    //     imgUrl: '/icons/add-personal.svg',
-    // },
+    {
+        label: 'Personal Room',
+        route: '/Score',
+        imgUrl: '/icons/add-personal.svg',
+    },
 ];

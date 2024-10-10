@@ -1,71 +1,95 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "@/components/ui/command"
-import { CheckIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { createGame } from './actions'
+import { createClient } from '@supabase/supabase-js'
 
-interface Team {
-  id: string;
-  name: string;
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default function AddNewScore() {
-  const [teamA, setTeamA] = useState<Team | null>(null)
-  const [teamB, setTeamB] = useState<Team | null>(null)
-  const [teams, setTeams] = useState<Team[]>([])
   const router = useRouter()
+  const [formData, setFormData] = useState({
+    teamAId: '',
+    teamBId: ''
+  })
+  const [teamNames, setTeamNames] = useState({
+    teamA: '',
+    teamB: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState({
+    teamA: false,
+    teamB: false
+  })
+
+  const fetchTeamName = async (id: string, team: 'teamA' | 'teamB') => {
+    setIsLoading(prev => ({ ...prev, [team]: true }))
+    try {
+      const { data, error } = await supabase
+        .from('Team')
+        .select('teamName')
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+
+      setTeamNames(prev => ({ ...prev, [team]: data?.teamName || 'チームが見つかりません' }))
+    } catch (error) {
+      console.error(`Error fetching ${team} name:`, error)
+      setTeamNames(prev => ({ ...prev, [team]: 'エラーが発生しました' }))
+    } finally {
+      setIsLoading(prev => ({ ...prev, [team]: false }))
+    }
+  }
 
   useEffect(() => {
-    // Simulating fetching teams from an API
-    const fetchTeams = async () => {
-      // Replace this with actual API call
-      const mockTeams: Team[] = [
-        { id: '1', name: 'Team Alpha' },
-        { id: '2', name: 'Team Beta' },
-        { id: '3', name: 'Team Gamma' },
-        { id: '4', name: 'Team Delta' },
-        { id: '5', name: 'Team Epsilon' },
-      ]
-      setTeams(mockTeams)
-    }
+    if (formData.teamAId) fetchTeamName(formData.teamAId, 'teamA')
+  }, [formData.teamAId])
 
-    fetchTeams()
-  }, [])
+  useEffect(() => {
+    if (formData.teamBId) fetchTeamName(formData.teamBId, 'teamB')
+  }, [formData.teamBId])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    setTeamNames(prev => ({ ...prev, [name === 'teamAId' ? 'teamA' : 'teamB']: '' }))
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!teamA || !teamB) {
-      alert('両チームを選択してください。')
+    setIsSubmitting(true)
+
+    if (!formData.teamAId || !formData.teamBId) {
+      alert('両チームのIDを入力してください。')
+      setIsSubmitting(false)
       return
     }
-    
+
     try {
-      // Here you would typically make an API call to register the match
-      // For demonstration, we're just simulating an API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('Match registered:', { teamA, teamB })
-      
-      // Redirect to the new score page
-      router.push('/newscore')
+      const form = new FormData()
+      form.append('teamAId', formData.teamAId)
+      form.append('teamBId', formData.teamBId)
+
+      const result = await createGame(form)
+      if (result.success) {
+        router.push('/SearchScore')
+      } else {
+        console.error('試合登録エラー:', result.error)
+        alert('試合の登録に失敗しました: ' + result.error)
+      }
     } catch (error) {
-      console.error('Error registering match:', error)
-      alert('試合の登録中にエラーが発生しました。もう一度お試しください。')
+      console.error('送信エラー:', error)
+      alert('送信中にエラーが発生しました')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -74,93 +98,41 @@ export default function AddNewScore() {
       <h1 className="text-3xl font-bold mb-8">新規試合登録</h1>
       <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
         <div className="space-y-2">
-          <Label htmlFor="teamA">チームA</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                className={cn(
-                  "w-full justify-between bg-zinc-700 text-white",
-                  !teamA && "text-muted-foreground"
-                )}
-              >
-                {teamA ? teamA.name : "チームAを選択"}
-                <CheckIcon className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", teamA ? "opacity-100" : "opacity-0")} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0 ">
-              <Command>
-                <CommandInput placeholder="チームを検索..." className="h-9" />
-                <CommandEmpty>チームが見つかりません。</CommandEmpty>
-                <CommandGroup>
-                  {teams.map((team) => (
-                    <CommandItem
-                      key={team.id}
-                      onSelect={() => {
-                        setTeamA(team)
-                      }}
-                    >
-                      {team.name}
-                      <CheckIcon
-                        className={cn(
-                          "ml-auto h-4 w-4 ",
-                          teamA?.id === team.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="teamAId">チームA ID</Label>
+          <Input
+            id="teamAId"
+            name="teamAId"
+            value={formData.teamAId}
+            onChange={handleInputChange}
+            placeholder="チームAのIDを入力"
+            className="bg-zinc-700 text-white"
+          />
+          {isLoading.teamA ? (
+            <p className="text-sm text-gray-400">読み込み中...</p>
+          ) : (
+            teamNames.teamA && <p className="text-2xl font-bold text-gray-400">{teamNames.teamA}</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="teamB">チームB</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                className={cn(
-                  "w-full justify-between bg-zinc-700 text-white",
-                  !teamB && "text-muted-foreground"
-                )}
-              >
-                {teamB ? teamB.name : "チームBを選択"}
-                <CheckIcon className={cn("ml-2 h-4 w-4 shrink-0 opacity-50", teamB ? "opacity-100" : "opacity-0")} />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-full p-0">
-              <Command>
-                <CommandInput placeholder="チームを検索..." className="h-9" />
-                <CommandEmpty>チームが見つかりません。</CommandEmpty>
-                <CommandGroup>
-                  {teams.map((team) => (
-                    <CommandItem
-                      key={team.id}
-                      onSelect={() => {
-                        setTeamB(team)
-                      }}
-                    >
-                      {team.name}
-                      <CheckIcon
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          teamB?.id === team.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="teamBId">チームB ID</Label>
+          <Input
+            id="teamBId"
+            name="teamBId"
+            value={formData.teamBId}
+            onChange={handleInputChange}
+            placeholder="チームBのIDを入力"
+            className="bg-zinc-700 text-white"
+          />
+          {isLoading.teamB ? (
+            <p className="text-sm text-gray-400">読み込み中...</p>
+          ) : (
+            teamNames.teamB && <p className="text-2xl font-bold text-gray-400">{teamNames.teamB}</p>
+          )}
         </div>
 
-        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
-          登録
+        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+          {isSubmitting ? '登録中...' : '登録'}
         </Button>
       </form>
     </div>

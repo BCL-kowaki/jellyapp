@@ -106,20 +106,18 @@ export default function SearchScore() {
           const teamB = teams.find(team => team.id === game.teamBId)
 
           return (
-
             <Card key={game.id} className="bg-gray-700">
-              <Link href="/NewScore">
-              <CardContent className="p-4 flex justify-between items-center">
-                <div>
-                  <p className="text-gray-300">GameId : {game.id}</p>
-                  <h2 className="text-3xl text-white font-semibold mt-1">
-                    {teamA?.teamName} vs {teamB?.teamName}
-                  </h2>
-                </div>
-                <p className="text-gray-300 mt-7">{game.date}</p>
-              </CardContent>
-
-            </Link>
+              <Link href={`/Score/${game.id}`}>
+                <CardContent className="p-4 flex justify-between items-center">
+                  <div>
+                    <p className="text-gray-300">GameId : {game.id}</p>
+                    <h2 className="text-3xl text-white font-semibold mt-1">
+                      {teamA?.teamName} vs {teamB?.teamName}
+                    </h2>
+                  </div>
+                  <p className="text-gray-300 mt-7">{game.date}</p>
+                </CardContent>
+              </Link>
             </Card>
           )
         })}
