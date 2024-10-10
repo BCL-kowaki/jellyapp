@@ -1,0 +1,61 @@
+.scoreCardInner {
+  width: 90%;
+  margin: 0 auto;
+  padding: 20px 0 40px;
+  color: #fff;
+}
+
+.scoreTitle {
+  font-size: 16px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.scoreFlex {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 40px 10px 0;
+}
+
+.scoreToral {
+  font-size: 120px;
+  font-weight: 900;
+}
+
+.teamName {
+  font-size: 24px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.scoreBorder {
+  font-size: 60px;
+  font-weight: 900;
+  position: relative;
+  top: 40px;
+}
+
+.quarterTable {
+  width: 80%;
+}
+
+.table {
+  width: 100%;
+  border-spacing: 0;
+}
+
+.table thead tr th {
+  border-bottom: solid 2px #fff;
+  padding: 10px 0;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.table tbody tr td {
+  border-bottom: solid 2px #ddd;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 28px;
+  font-weight: 900;
+}
