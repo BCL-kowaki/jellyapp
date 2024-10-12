@@ -29,6 +29,7 @@ type GameData = {
   id: number;
   teamAId: number;
   teamBId: number;
+  date: string; // 日付フィールドを追加
 };
 
 type TeamData = {
@@ -54,7 +55,7 @@ type ScoreData = {
 export default function Score() {
   const params = useParams();
   const gameId = params.id as string;
-  const today = format(new Date(), 'yyyy/MM/dd')
+  const [gameDate, setGameDate] = useState<string>('') // ゲームの日付を保持するstate
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [teamAData, setTeamAData] = useState<TeamData | null>(null)
   const [teamBData, setTeamBData] = useState<TeamData | null>(null)
@@ -63,19 +64,19 @@ export default function Score() {
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   
-  // Form state
+  // フォームのstate
   const [quarter, setQuarter] = useState('')
   const [category, setCategory] = useState('')
   const [playerId, setPlayerId] = useState('')
-  const [point, setPoint] = useState(0)
+  const [point, setPoint] = useState(1)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const fetchData = useCallback(async () => {
     try {
-      // Fetch only the specific game data for the given [id]
+      // 指定されたゲームIDのデータを取得
       const { data: fetchedGameData, error: gameError } = await supabase
         .from('Game')
-        .select('id, teamAId, teamBId')
+        .select('id, teamAId, teamBId, date')
         .eq('id', gameId)
         .single() as { data: GameData | null, error: PostgrestError | null };
 
@@ -83,8 +84,9 @@ export default function Score() {
       if (!fetchedGameData) throw new Error('No game data found');
 
       setGameData(fetchedGameData);
+      setGameDate(format(new Date(fetchedGameData.date), 'yyyy/MM/dd')); // 日付をフォーマット
 
-      // Fetch team data for both teams
+      // チームデータの取得
       const { data: teamData, error: teamError } = await supabase
         .from('Team')
         .select('id, teamName')
@@ -97,7 +99,7 @@ export default function Score() {
       setTeamAData(teamA);
       setTeamBData(teamB);
 
-      // Fetch player data for both teams
+      // プレイヤーデータの取得
       const fetchPlayerData = async (teamId: number) => {
         const { data: playerData, error: playerError } = await supabase
           .from('Player')
@@ -111,7 +113,7 @@ export default function Score() {
       const playerDataA = await fetchPlayerData(fetchedGameData.teamAId);
       const playerDataB = await fetchPlayerData(fetchedGameData.teamBId);
 
-      // Fetch score data for all players in this game
+      // スコアデータの取得
       const { data: scoreData, error: scoreError } = await supabase
         .from('Score')
         .select('playerId, kinds, point')
@@ -119,7 +121,7 @@ export default function Score() {
 
       if (scoreError) throw scoreError;
 
-      // Process player data with scores
+      // プレイヤーデータの処理
       const processPlayerData = (playerData: Player[]): Player[] => {
         return playerData.map(player => {
           const playerScores = scoreData?.filter(score => score.playerId === player.id) || []
@@ -138,7 +140,6 @@ export default function Score() {
 
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Add error handling here (e.g., setting an error state)
     }
   }, [gameId]);
 
@@ -146,13 +147,35 @@ export default function Score() {
     fetchData();
   }, [fetchData, refreshTrigger]);
 
+  useEffect(() => {
+    // カテゴリーに基づいてデフォルトのポイント値を設定
+    if (category === 'point_2P') {
+      setPoint(2)
+    } else if (category === 'point_3P') {
+      setPoint(3)
+    } else {
+      setPoint(1)
+    }
+  }, [category])
+
   const handleTeamChange = (value: string) => {
     setSelectedTeam(parseInt(value));
-    setPlayerId(''); // Reset player selection when team changes
+    setPlayerId(''); // チーム変更時にプレイヤー選択をリセット
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // フォームのバリデーション
+    if (!quarter || !selectedTeam || !category) {
+      alert('クォーター、チーム、カテゴリーは必須項目です。');
+      return;
+    }
+    if (category !== 'timeout' && !playerId) {
+      alert('タイムアウト以外の場合、選手の選択は必須です。');
+      return;
+    }
+
     setSubmitStatus('loading');
 
     try {
@@ -161,33 +184,33 @@ export default function Score() {
         .insert([
           {
             gameId: parseInt(gameId),
-            playerId: parseInt(playerId),
+            playerId: category !== 'timeout' ? parseInt(playerId) : null,
             teamId: selectedTeam,
             quarter,
             kinds: category,
-            point,
+            point: 1, // ポイント値は常に1として送信
           },
         ]);
 
       if (error) throw error;
 
       setSubmitStatus('success');
-      // Reset form
-      setQuarter('');
+      // フォームのリセット（クォーターを除く）
       setCategory('');
       setPlayerId('');
-      setPoint(0);
+      setPoint(1);
+      setSelectedTeam(null);
       
-      // Trigger a refresh of the data
+      // データの再取得をトリガー
       setRefreshTrigger(prev => prev + 1);
 
-      // Force a re-render of child components
+      // 子コンポーネントの再レンダリングを強制
       setGameData(prevData => ({ ...prevData! }));
     } catch (error) {
       console.error('Error submitting score:', error);
       setSubmitStatus('error');
     } finally {
-      // Reset submit status after a short delay
+      // 短い遅延後にsubmitStatusをリセット
       setTimeout(() => setSubmitStatus('idle'), 2000);
     }
   };
@@ -237,19 +260,17 @@ export default function Score() {
         <section className="flex size-full flex-col text-white">
           <div className={styles.mainContent}>
             <div className={styles.mainContent__inner}>
+              <h1 className="text-3xl font-bold mb-2">{gameDate}</h1>
               <div className='flex justify-between'>
-                <h1 className="text-3xl font-bold mb-8">{today}</h1>
-                <h2 className="text-xl font-bold mb-6 mt-4">Game ID: {gameId}</h2>
-              </div>
-              {gameData && (
-                <div className="mb-4">
-                  <p>Team A ID: {gameData.teamAId}</p>
-                  <p>Team B ID: {gameData.teamBId}</p>
-                </div>
+              <h2 className="text-xl font-bold mb-2 mt-5">Game ID: {gameId}</h2>
+              {gameData && teamAData && teamBData && (
+                <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
               )}
+              </div>
               <div className="mb-5">
                 <Card x-chunk="dashboard-07-chunk-2">
                   <section className="flex flex-col gap-10 p-8 text-white">
+                    <form className="mt-4 mb-2" onSubmit={handleSubmit}>
                     <form className="mt-4 mb-2" onSubmit={handleSubmit}>
                       <div className="flex justify-between gap-10">
                         <div className="flex justify-between size-2/3">
@@ -258,6 +279,7 @@ export default function Score() {
                               <Select
                                 value={quarter}
                                 onValueChange={setQuarter}
+                                required
                               >
                                 <SelectTrigger
                                   id="quarter"
@@ -274,7 +296,10 @@ export default function Score() {
                               </Select>
                             </div>
                             <div className="mb-4">
-                              <Select onValueChange={handleTeamChange}>
+                              <Select 
+                                onValueChange={handleTeamChange}
+                                required
+                              >
                                 <SelectTrigger
                                   id="team"
                                   aria-label="Select team"
@@ -301,6 +326,7 @@ export default function Score() {
                               <Select
                                 value={category}
                                 onValueChange={setCategory}
+                                required
                               >
                                 <SelectTrigger
                                   id="category"
@@ -321,6 +347,7 @@ export default function Score() {
                               <Select
                                 value={playerId}
                                 onValueChange={setPlayerId}
+                                required={category !== 'timeout'}
                               >
                                 <SelectTrigger
                                   id="player"
@@ -335,6 +362,7 @@ export default function Score() {
                                         key={player.id}
                                         value={player.id.toString()}
                                       >
+                                        
                                         {player.name}
                                       </SelectItem>
                                     ))}
@@ -371,7 +399,7 @@ export default function Score() {
                               type="button"
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 shrink-0  rounded-full text-black bg-white"
+                              className="h-8 w-8 shrink-0 rounded-full text-black bg-white"
                               onClick={() => setPoint((prev) => Math.min(prev + 1, 3))}
                               disabled={point >= 3}
                             >
@@ -388,6 +416,8 @@ export default function Score() {
                       >
                         {submitStatus === "loading" ? "Submitting..." : "Submit"}
                       </Button>
+                    </form>
+
                     </form>
                   </section>
                 </Card>

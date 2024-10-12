@@ -115,7 +115,7 @@ export default function SearchScore() {
                       {teamA?.teamName} vs {teamB?.teamName}
                     </h2>
                   </div>
-                  <p className="text-gray-300 mt-7">{game.date}</p>
+                  <p className="text-xl text-gray-300 mt-9">{game.date}</p>
                 </CardContent>
               </Link>
             </Card>

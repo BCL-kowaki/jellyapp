@@ -229,7 +229,7 @@ app.get("/api/auth/score", async (req, res) => {
 
 // 新規ゲームAPI
 app.post("/api/auth/game/register", async (req, res) => {
-  const { teamAId, teamBId, } = req.body;
+  const { date, teamAId, teamBId, } = req.body;
 
   if (!teamAId || !teamBId) {
     return res.status(400).json({
@@ -240,6 +240,7 @@ app.post("/api/auth/game/register", async (req, res) => {
   try {
     const game = await prisma.game.create({
       data: {
+        date,
         teamA: {
           connect: {
             id: parseInt(teamAId),

@@ -68,6 +68,7 @@ model Score {
 
 model Game {
   id        Int      @id @default(autoincrement())
+  date      DateTime
   teamAId   Int
   teamA     Team     @relation("TeamAToGame", fields: [teamAId], references: [id])
   teamBId   Int

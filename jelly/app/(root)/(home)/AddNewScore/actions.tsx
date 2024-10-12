@@ -15,13 +15,15 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 export async function createGame(formData: FormData) {
   const teamAId = formData.get('teamAId') as string
   const teamBId = formData.get('teamBId') as string
+  const date = formData.get('date') as string
 
   try {
     const { data, error } = await supabase
       .from('Game')
       .insert({
         teamAId: teamAId,
-        teamBId: teamBId
+        teamBId: teamBId,
+        date: new Date(date).toISOString()
       })
       .select()
 
