@@ -271,7 +271,6 @@ export default function Score() {
                 <Card x-chunk="dashboard-07-chunk-2">
                   <section className="flex flex-col gap-10 p-8 text-white">
                     <form className="mt-4 mb-2" onSubmit={handleSubmit}>
-                    <form className="mt-4 mb-2" onSubmit={handleSubmit}>
                       <div className="flex justify-between gap-10">
                         <div className="flex justify-between size-2/3">
                           <div className={styles.flexWHalf}>
@@ -416,8 +415,6 @@ export default function Score() {
                       >
                         {submitStatus === "loading" ? "Submitting..." : "Submit"}
                       </Button>
-                    </form>
-
                     </form>
                   </section>
                 </Card>
