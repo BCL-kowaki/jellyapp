@@ -30,18 +30,35 @@ interface PlayerData {
   } | null;
 }
 
-function isPlayerData(data: any): data is PlayerData {
+function isPlayerData(data: unknown): data is PlayerData {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+
+  const {
+    id,
+    image,
+    name,
+    No,
+    position,
+    category,
+    height,
+    Team
+  } = data as Record<string, unknown>;
+
   return (
-    typeof data === 'object' &&
-    data !== null &&
-    (typeof data.id === 'string' || data.id === undefined) &&
-    (typeof data.image === 'string' || data.image === null || data.image === undefined) &&
-    (typeof data.name === 'string' || data.name === undefined) &&
-    (typeof data.No === 'string' || data.No === undefined) &&
-    (typeof data.position === 'string' || data.position === undefined) &&
-    (typeof data.category === 'string' || data.category === undefined) &&
-    (typeof data.height === 'string' || data.height === undefined) &&
-    (data.Team === undefined || data.Team === null || (typeof data.Team === 'object' && (typeof data.Team.teamName === 'string' || data.Team.teamName === undefined)))
+    (typeof id === 'string' || id === undefined) &&
+    (typeof image === 'string' || image === null || image === undefined) &&
+    (typeof name === 'string' || name === undefined) &&
+    (typeof No === 'string') &&
+    (typeof position === 'string' || position === undefined) &&
+    (typeof category === 'string' || category === undefined) &&
+    (typeof height === 'string' || height === undefined) &&
+    (Team === undefined || Team === null || (
+      typeof Team === 'object' &&
+      Team !== null &&
+      (typeof (Team as { teamName?: unknown }).teamName === 'string' || (Team as { teamName?: unknown }).teamName === undefined)
+    ))
   );
 }
 
@@ -174,8 +191,8 @@ export default function Player() {
       </section>
       <div className={styles.mainContent}>
         <div className={styles.mainContent__inner}>
-          <PlayerNav playerData={playerData} />
-          <PlayerContent playerData={playerData} />
+          <PlayerNav />
+          <PlayerContent />
         </div>
       </div>
     </section>

@@ -1,18 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
-import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import React from "react";
 import styles from "./style.module.scss";
 import Image from "next/image";
-
-// 環境変数のチェックとSupabaseクライアントの作成
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing environment variables for Supabase')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { supabase } from '@/lib/supabase'  // Supabaseクライアントをインポート
 
 // Supabaseから返されるデータの型定義
 interface SupabasePlayerData {
@@ -39,17 +28,30 @@ interface PlayerData {
 }
 
 // 型ガード関数
-function isValidPlayerData(data: any): data is SupabasePlayerData {
+function isValidPlayerData(data: unknown): data is SupabasePlayerData {
+  if (typeof data !== 'object' || data === null) {
+    return false;
+  }
+
+  const {
+    images,
+    name,
+    no,
+    position,
+    category,
+    height,
+    Team
+  } = data as Record<string, unknown>;
+
   return (
-    data &&
-    typeof data.images === 'string' &&
-    typeof data.name === 'string' &&
-    typeof data.no === 'string' &&
-    typeof data.position === 'string' &&
-    typeof data.category === 'string' &&
-    typeof data.height === 'string' &&
-    data.Team &&
-    typeof data.Team.teamName === 'string'
+    typeof images === 'string' &&
+    typeof name === 'string' &&
+    typeof no === 'string' &&
+    typeof position === 'string' &&
+    typeof category === 'string' &&
+    typeof height === 'string' &&
+    typeof Team === 'object' && Team !== null &&
+    'teamName' in Team && typeof Team.teamName === 'string'
   );
 }
 
@@ -85,28 +87,22 @@ async function getPlayerData(id: string): Promise<PlayerData | null> {
   return null
 }
 
-// サーバーサイドでデータを取得
-export async function getServerSideProps({ params }: { params: { id: string } }) {
+// コンポーネントを非同期関数に変更
+export default async function PlayerSmy({ params }: { params: { id: string } }) {
   const playerData = await getPlayerData(params.id)
 
-  return {
-    props: { playerData }
-  }
-}
-
-const PlayerSmy: React.FC<{ playerData: PlayerData | null }> = ({ playerData }) => {
   if (!playerData) return <div>Player not found</div>
 
   return (
     <section className={styles.playerContent}>
       <section className={styles.playerContent__inner}>
         <div className={styles.playerContent__inner__img}>
-        <Image
+          <Image
             src={`/images/${playerData.images}`}
-            alt="playerImage"
+            alt={`${playerData.name}の画像`}
             width={150}
             height={150}
-        />
+          />
         </div>
         <div className={styles.playerContent__inner__smy}>
           <div className={styles.playerContent__inner__smy__name}>
@@ -115,28 +111,26 @@ const PlayerSmy: React.FC<{ playerData: PlayerData | null }> = ({ playerData }) 
 
           <div className={styles.playerContent__inner__smy__data}>
             <div className={styles.playerContent__inner__smy__data__flex}>
-            <div className={styles.playerContent__inner__smy__data__flex__oosition}>
-              <p>ポジション：<span>{playerData.position}</span></p>
-            </div>
-            <div className={styles.playerContent__inner__smy__data__flex__category}>
-              <p>所属：<span>{playerData.category}</span></p>
-            </div>
-            <div className={styles.playerContent__inner__smy__data__flex__height}>
-              <p>身長：<span>{playerData.height}</span></p>
-            </div>
+              <div className={styles.playerContent__inner__smy__data__flex__position}>
+                <p>ポジション：<span>{playerData.position}</span></p>
+              </div>
+              <div className={styles.playerContent__inner__smy__data__flex__category}>
+                <p>所属：<span>{playerData.category}</span></p>
+              </div>
+              <div className={styles.playerContent__inner__smy__data__flex__height}>
+                <p>身長：<span>{playerData.height}</span></p>
+              </div>
             </div>
 
-          <div className={styles.playerContent__inner__smy__data__border}></div>
-          <div className={styles.playerContent__inner__smy__data__flexSmy}>
-            <dl>
-              <dt>【所属チーム】</dt><dd>{playerData.teamName}</dd>
-            </dl> 
+            <div className={styles.playerContent__inner__smy__data__border}></div>
+            <div className={styles.playerContent__inner__smy__data__flexSmy}>
+              <dl>
+                <dt>【所属チーム】</dt><dd>{playerData.teamName}</dd>
+              </dl> 
             </div>
           </div>
         </div>
       </section>
     </section>
   );
-};
-
-export default PlayerSmy;
+}

@@ -11,7 +11,7 @@ import TotalScore from './TotalScore/page'
 import TeamFoul from './TeamFoul/page'
 import TeamTimeout from './TeamTimeout/page'
 
-// Supabaseクライアントの初期化
+// Supabase client initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -21,7 +21,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// 型定義
+// Type definitions
 type GameData = {
   id: number;
   teamAId: number;
@@ -58,11 +58,11 @@ export default function Score() {
   const [teamBData, setTeamBData] = useState<TeamData | null>(null)
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const fetchData = useCallback(async () => {
     try {
-      // 指定されたゲームIDのデータを取得
+      // Fetch game data
       const { data: fetchedGameData, error: gameError } = await supabase
         .from('Game')
         .select('id, teamAId, teamBId, date')
@@ -75,7 +75,7 @@ export default function Score() {
       setGameData(fetchedGameData);
       setGameDate(format(new Date(fetchedGameData.date), 'yyyy/MM/dd'));
 
-      // チームデータの取得
+      // Fetch team data
       const { data: teamData, error: teamError } = await supabase
         .from('Team')
         .select('id, teamName')
@@ -88,7 +88,7 @@ export default function Score() {
       setTeamAData(teamA);
       setTeamBData(teamB);
 
-      // プレイヤーデータの取得
+      // Fetch player data
       const fetchPlayerData = async (teamId: number) => {
         const { data: playerData, error: playerError } = await supabase
           .from('Player')
@@ -102,7 +102,7 @@ export default function Score() {
       const playerDataA = await fetchPlayerData(fetchedGameData.teamAId);
       const playerDataB = await fetchPlayerData(fetchedGameData.teamBId);
 
-      // スコアデータの取得
+      // Fetch score data
       const { data: scoreData, error: scoreError } = await supabase
         .from('Score')
         .select('playerId, kinds, point')
@@ -110,7 +110,7 @@ export default function Score() {
 
       if (scoreError) throw scoreError;
 
-      // プレイヤーデータの処理
+      // Process player data
       const processPlayerData = (playerData: Player[]): Player[] => {
         return playerData.map(player => {
           const playerScores = scoreData?.filter(score => score.playerId === player.id) || []
@@ -134,18 +134,18 @@ export default function Score() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData, refreshTrigger]);
+  }, [fetchData, refreshKey]);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data === 'updateScore') {
-        fetchData()
+        setRefreshKey(prevKey => prevKey + 1);
       }
     }
 
     window.addEventListener('message', handleMessage)
     return () => window.removeEventListener('message', handleMessage)
-  }, [fetchData])
+  }, [])
 
   const handleButtonClick = () => {
     const width = 300;
@@ -161,7 +161,7 @@ export default function Score() {
   };
 
   const renderTeamTable = (teamName: string, teamId: number, playerData: Player[]) => (
-    <Card x-chunk="dashboard-05-chunk-3" className='size-full'>      
+    <Card className='size-full'>      
       <div className="mb-8">
         <CardHeader className="px-7">
           <CardTitle>
@@ -200,13 +200,12 @@ export default function Score() {
   )
 
   return (
-    <>
-      <section className="flex size-full gap-10 text-white">
-        <section className="flex size-full flex-col text-white">
-          <div className={styles.mainContent}>
-            <div className={styles.mainContent__inner}>
-              <h1 className="text-3xl font-bold mb-2">{gameDate}</h1>
-              <div className='flex justify-between'>
+    <section className="flex size-full gap-10 text-white">
+      <section className="flex size-full flex-col text-white">
+        <div className={styles.mainContent}>
+          <div className={styles.mainContent__inner}>
+            <h1 className="text-3xl font-bold mb-2">{gameDate}</h1>
+            <div className='flex justify-between'>
               <h2 className="text-xl font-bold mb-2 mt-5">Game ID: {gameId}</h2>
               {gameData && teamAData && teamBData && (
                 <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
@@ -214,28 +213,27 @@ export default function Score() {
               <button onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 rounded">
                 コントローラーを開く
               </button>
-              </div>
-              <section className="flex text-white gap-5 mt-3 mb-5">
-                <div className="size-full">
-                  <TotalScore key={refreshTrigger} />
-                </div>
-              </section>
-              <section className="flex text-white gap-5 mb-5">
-                <div className="size-1/2">
-                  <TeamFoul key={refreshTrigger} />
-                </div>
-                <div className="size-1/2">
-                  <TeamTimeout key={refreshTrigger} />
-                </div>
-              </section>
-              <section className="flex text-white gap-5">
-                {teamAData && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
-                {teamBData && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
-              </section>
             </div>
+            <section className="flex text-white gap-5 mt-3 mb-5">
+              <div className="size-full">
+                <TotalScore key={refreshKey} />
+              </div>
+            </section>
+            <section className="flex text-white gap-5 mb-5">
+              <div className="size-1/2">
+                <TeamFoul key={refreshKey} />
+              </div>
+              <div className="size-1/2">
+                <TeamTimeout key={refreshKey} />
+              </div>
+            </section>
+            <section className="flex text-white gap-5">
+              {teamAData && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
+              {teamBData && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
+            </section>
           </div>
-        </section>
+        </div>
       </section>
-    </>
+    </section>
   );
 }
