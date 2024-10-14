@@ -17,16 +17,16 @@ const HomeLayout = ({ children }: { children: ReactNode }) => {
       <div className='flex'>
         <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
         <section 
-          className={`
-            flex min-h-screen flex-1 flex-col pt-20 max-md:pb-14 
-            transition-all duration-300 ease-in-out
-            ${isSidebarOpen ? 'ml-[264px] w-[calc(100%-264px)]' : 'ml-[78px] w-[calc(100%-78px)]'}
-          `}
-        >
-          <div className="w-full">
-            {children}
-          </div>    
-        </section>
+  className={`
+    flex min-h-screen flex-1 flex-col pt-20 max-md:pb-14 
+    transition-all duration-300 ease-in-out
+    ${isSidebarOpen ? 'ml-[264px] w-[calc(100%-264px)] sm:ml-0 sm:w-full' : 'ml-[78px] w-[calc(100%-78px)] sm:ml-0 sm:w-full'}
+  `}
+>
+  <div className="w-full">
+    {children}
+  </div>    
+</section>
       </div>
     </main>
   )

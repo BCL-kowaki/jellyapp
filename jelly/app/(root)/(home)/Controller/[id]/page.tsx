@@ -232,7 +232,7 @@ export default function Controller() {
   }
 
   return (
-    <section className="flex size-full gap-10 text-white">
+    <section className="flex size-full text-white">
       <div ref={topRef}></div>
       {showQRCode && !isMobile() && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

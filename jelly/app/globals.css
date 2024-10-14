@@ -227,3 +227,15 @@
     color: #fff;
     font-size: 16px;
   }
+
+
+  @media screen and (max-width: 640px) {
+
+    .w-\[calc\(100\%-78px\)\] {
+      margin-left: 0!important;
+    }
+    .ml-\[264px\] {
+      margin-left: 0!important;
+  }
+    
+      }
