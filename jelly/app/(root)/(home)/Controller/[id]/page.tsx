@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
@@ -20,12 +21,10 @@ import {
 } from "@/components/ui/select"
 import { QRCodeSVG } from 'qrcode.react'
 
-// Supabaseクライアントの初期化
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// 型定義
 type GameData = {
   id: number
   teamAId: number
@@ -62,15 +61,14 @@ export default function Controller() {
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
-  const [quarter, setQuarter] = useState("preRegist");
+  const [quarter, setQuarter] = useState("starter")
   const [category, setCategory] = useState("")
-  const [playerId, setPlayerId] = useState("")
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([])
   const [point, setPoint] = useState(1)
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle")
 
-  // QRコード用の状態
   const [showQRCode, setShowQRCode] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
 
@@ -78,7 +76,6 @@ export default function Controller() {
 
   const fetchData = useCallback(async () => {
     try {
-      // 指定されたゲームIDのデータを取得
       const { data: fetchedGameData, error: gameError } = await supabase
         .from("Game")
         .select("id, teamAId, teamBId, date")
@@ -91,7 +88,6 @@ export default function Controller() {
       setGameData(fetchedGameData)
       setGameDate(format(new Date(fetchedGameData.date), "yyyy/MM/dd"))
 
-      // チームデータの取得
       const { data: teamData, error: teamError } = await supabase
         .from("Team")
         .select("id, teamName")
@@ -106,7 +102,6 @@ export default function Controller() {
       setTeamAData(teamA)
       setTeamBData(teamB)
 
-      // プレイヤーデータの取得
       const fetchPlayerData = async (teamId: number) => {
         const { data: playerData, error: playerError } = await supabase
           .from("Player")
@@ -136,8 +131,19 @@ export default function Controller() {
     setShowQRCode(!isMobile())
   }, [])
 
+  useEffect(() => {
+    if (quarter === "starter") {
+      setCategory("starter")
+    } else {
+      setCategory("")
+    }
+    setSelectedPlayers([])
+    setSelectedTeam(null)
+  }, [quarter])
+
   const handleTeamChange = (teamId: string) => {
     setSelectedTeam(parseInt(teamId))
+    setSelectedPlayers([])
   }
 
   const handleCategoryChange = (value: string) => {
@@ -149,7 +155,23 @@ export default function Controller() {
     } else {
       setPoint(1)
     }
+    setSelectedPlayers([])
   }
+
+  const handlePlayerSelection = (playerId: string) => {
+    setSelectedPlayers(prev => 
+      prev.includes(playerId)
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    )
+  }
+
+  const resetForm = useCallback(() => {
+    setCategory("")
+    setSelectedPlayers([])
+    setPoint(1)
+    setSelectedTeam(null)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -158,7 +180,7 @@ export default function Controller() {
       !quarter ||
       !selectedTeam ||
       !category ||
-      (category !== "timeout" && !playerId)
+      (category !== "timeout" && selectedPlayers.length === 0)
     ) {
       alert("全ての必須項目を入力してください。")
       return
@@ -167,35 +189,41 @@ export default function Controller() {
     setSubmitStatus("loading")
 
     try {
-      const { error } = await supabase.from("Score").insert([
-        {
-          gameId: parseInt(gameId),
-          playerId: category !== "timeout" ? parseInt(playerId) : null,
-          teamId: selectedTeam,
-          quarter,
-          kinds: category,
-          point: point,
-        },
-      ])
+      const records = category === "starter"
+        ? selectedPlayers.map(playerId => ({
+            gameId: parseInt(gameId),
+            playerId: parseInt(playerId),
+            teamId: selectedTeam,
+            quarter,
+            kinds: category,
+            point: 0,
+          }))
+        : [{
+            gameId: parseInt(gameId),
+            playerId: category !== "timeout" ? parseInt(selectedPlayers[0]) : null,
+            teamId: selectedTeam,
+            quarter,
+            kinds: category,
+            point: point,
+          }]
+
+      const { error } = await supabase.from("Score").insert(records)
 
       if (error) throw error
 
+      await new Promise(resolve => setTimeout(resolve, 0))
       setSubmitStatus("success")
-      // フォームのリセット（クォーターとチームを除く）
-      setCategory("")
-      setPlayerId("")
-      setPoint(1)
-
-      // 親ウィンドウに更新を通知
+      resetForm()
       window.opener?.postMessage("updateScore", "*")
 
-      // ページ上部にスクロール
       topRef.current?.scrollIntoView({ behavior: 'smooth' })
     } catch (error) {
       console.error("Error submitting score:", error)
       setSubmitStatus("error")
     } finally {
-      setTimeout(() => setSubmitStatus("idle"), 2000)
+      setTimeout(() => {
+        setSubmitStatus("idle")
+      }, 2000)
     }
   }
 
@@ -204,12 +232,13 @@ export default function Controller() {
   }
 
   return (
-    <section className="flex size-full text-white">
+    <section className="flex size-full gap-10 text-white">
       <div ref={topRef}></div>
       {showQRCode && !isMobile() && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full relative">
             <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-black">このページのQRコード</h2>
               <Button variant="ghost" size="icon" onClick={closeQRCode} className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
                 <X className="h-6 w-6" />
               </Button>
@@ -218,7 +247,7 @@ export default function Controller() {
               <QRCodeSVG value={currentUrl} size={200} />
             </div>
             <p className="text-sm text-center text-gray-600">
-              スマホで入力する場合はこのQRコードをスキャンしてください。
+              このQRコードをスキャンして、他のデバイスでこのページを開きます。
             </p>
           </div>
         </div>
@@ -247,7 +276,7 @@ export default function Controller() {
                           <SelectValue placeholder="クォーターを選択" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="preRegist">開始前スタメン登録</SelectItem>
+                          <SelectItem value="starter">スタメン登録</SelectItem>
                           <SelectItem value="first">1クォーター</SelectItem>
                           <SelectItem value="second">2クォーター</SelectItem>
                           <SelectItem value="third">3クォーター</SelectItem>
@@ -270,7 +299,7 @@ export default function Controller() {
                               />
                               <Label htmlFor="category-2P">得点_2P</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
                                 value="rebound"
                                 id="category-rebound"
@@ -279,30 +308,29 @@ export default function Controller() {
                                 リバウンド
                               </Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
                                 value="point_3P"
                                 id="category-3P"
                               />
                               <Label htmlFor="category-3P">得点_3P</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
                                 value="assist"
                                 id="category-assist"
                               />
                               <Label htmlFor="category-assist">アシスト</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
                                 value="point_FT"
                                 id="category-FT"
                               />
                               <Label  htmlFor="category-FT">得点_FT</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
-                                
                                 value="turnover"
                                 id="category-turnover"
                               />
@@ -310,7 +338,7 @@ export default function Controller() {
                                 ターンオーバー
                               </Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem
                                 value="timeout"
                                 id="category-timeout"
@@ -319,15 +347,15 @@ export default function Controller() {
                                 タイムアウト
                               </Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem value="foul" id="category-foul" />
                               <Label htmlFor="category-foul">ファール</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem value="starter" id="category-starter" />
                               <Label htmlFor="category-starter">スタメン出場</Label>
                             </div>
-                            <div className="flex items-center space-x-2 mb-7 w-1/2">
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
                               <RadioGroupItem value="participation" id="category-participation" />
                               <Label htmlFor="category-participation">交代出場</Label>
                             </div>
@@ -340,10 +368,10 @@ export default function Controller() {
                       <div className="space-y-2">
                         <RadioGroup
                           onValueChange={handleTeamChange}
-                          value={selectedTeam?.toString()}
+                          value={selectedTeam?.toString() || ""}
                         >
                           {teamAData && (
-                            <div className={styles.radioGroup20}>
+                            <div className={styles.radioGroup24}>
                               <div className="flex items-center mb-2">
                                 <RadioGroupItem
                                   value={teamAData.id.toString()}
@@ -357,7 +385,7 @@ export default function Controller() {
                             </div>
                           )}
                           {teamBData && (
-                            <div className={styles.radioGroup20}>
+                            <div className={styles.radioGroup24}>
                               <div className="flex items-center mb-2">
                                 <RadioGroupItem
                                   value={teamBData.id.toString()}
@@ -377,41 +405,53 @@ export default function Controller() {
                       <div className="mb-4">
                         <div className={styles.radioGroup20}>
                           <ScrollArea className="h-[220px] w-full rounded-md border p-4">
-                            <RadioGroup
-                              onValueChange={setPlayerId}
-                              value={playerId}
-                            >
-                              {selectedTeam === teamAData?.id &&
-                                processedPlayerDataA.map((player) => (
-                                  <div
-                                    key={player.id}
-                                    className="flex items-center space-x-2 mb-2"
-                                  >
-                                    <RadioGroupItem
-                                      value={player.id.toString()}
-                                      id={`player-${player.id}`}
-                                    />
-                                    <Label htmlFor={`player-${player.id}`}>
-                                      #{player.No}｜{player.name}
-                                    </Label>
-                                  </div>
-                                ))}
-                              {selectedTeam === teamBData?.id &&
-                                processedPlayerDataB.map((player) => (
-                                  <div
-                                    key={player.id}
-                                    className="flex items-center space-x-2 mb-3"
-                                  >
-                                    <RadioGroupItem
-                                      value={player.id.toString()}
-                                      id={`player-${player.id}`}
-                                    />
-                                    <Label htmlFor={`player-${player.id}`}>
-                                      #{player.No}｜{player.name}
-                                    </Label>
-                                  </div>
-                                ))}
-                            </RadioGroup>
+                            {category === "starter" ? (
+                              selectedTeam === teamAData?.id
+                                ? processedPlayerDataA.map((player) => (
+                                    <div key={player.id} className="flex items-center space-x-2 mb-2">
+                                      <Checkbox
+                                        id={`player-${player.id}`}
+                                        checked={selectedPlayers.includes(player.id.toString())}
+                                        onCheckedChange={() => handlePlayerSelection(player.id.toString())}
+                                      />
+                                      <Label htmlFor={`player-${player.id}`}>
+                                        #{player.No}｜{player.name}
+                                      </Label>
+                                    </div>
+                                  ))
+                                : processedPlayerDataB.map((player) => (
+                                    <div key={player.id} className="flex items-center space-x-2 mb-2">
+                                      <Checkbox
+                                        id={`player-${player.id}`}
+                                        checked={selectedPlayers.includes(player.id.toString())}
+                                        onCheckedChange={() => handlePlayerSelection(player.id.toString())}
+                                      />
+                                      <Label htmlFor={`player-${player.id}`}>
+                                        #{player.No}｜{player.name}
+                                      </Label>
+                                    </div>
+                                  ))
+                            ) : (
+                              <RadioGroup onValueChange={(value) => setSelectedPlayers([value])} value={selectedPlayers[0] || ""}>
+                                {selectedTeam === teamAData?.id
+                                  ? processedPlayerDataA.map((player) => (
+                                      <div key={player.id} className="flex items-center space-x-2 mb-2">
+                                        <RadioGroupItem value={player.id.toString()} id={`player-${player.id}`} />
+                                        <Label htmlFor={`player-${player.id}`}>
+                                          #{player.No}｜{player.name}
+                                        </Label>
+                                      </div>
+                                    ))
+                                  : processedPlayerDataB.map((player) => (
+                                      <div key={player.id} className="flex items-center space-x-2 mb-2">
+                                        <RadioGroupItem value={player.id.toString()} id={`player-${player.id}`} />
+                                        <Label htmlFor={`player-${player.id}`}>
+                                          #{player.No}｜{player.name}
+                                        </Label>
+                                      </div>
+                                    ))}
+                              </RadioGroup>
+                            )}
                           </ScrollArea>
                         </div>
                       </div>

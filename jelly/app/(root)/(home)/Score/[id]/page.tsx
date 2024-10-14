@@ -5,11 +5,13 @@ import { format } from 'date-fns'
 import styles from "./style.module.scss"
 import { createClient, PostgrestError } from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
-import {Card, CardDescription, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
+import { Card, CardDescription, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ClipboardList, Pen } from 'lucide-react'
 import TotalScore from './TotalScore/page'
 import TeamFoul from './TeamFoul/page'
 import TeamTimeout from './TeamTimeout/page'
+import ScoreLog from './ScoreLog/page'
 
 // Supabase client initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -63,6 +65,7 @@ export default function Score() {
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
   const [refreshKey, setRefreshKey] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -223,8 +226,8 @@ export default function Score() {
   )
 
   return (
-    <section className="flex size-full gap-10 text-white">
-      <section className="flex size-full flex-col text-white">
+    <section className="flex h-screen text-white">
+      <section className="flex-grow px-4">
         <div className={styles.mainContent}>
           <div className={styles.mainContent__inner}>
             <h1 className="text-3xl font-bold mb-2">{gameDate}</h1>
@@ -233,8 +236,12 @@ export default function Score() {
               {gameData && teamAData && teamBData && (
                 <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
               )}
-              <button onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 rounded">
-                スコア入力
+              <button
+                onClick={handleButtonClick}
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-6 py-0 rounded"
+                aria-label="コントローラーを開く"
+              >
+                <Pen className="h-5 w-5" />
               </button>
             </div>
             <section className="flex text-white gap-5 mt-3 mb-5">
@@ -257,6 +264,18 @@ export default function Score() {
           </div>
         </div>
       </section>
+      <button
+        className="fixed top-4 right-4 z-50 p-2 rounded-md"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        <ClipboardList className="h-6 w-6 text-white" />
+      </button>
+      <aside className={`fixed top-0 right-0 bg-dark-1 h-full overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-2/5' : 'w-0'}`}>
+        
+        <div className="p-8">
+          <ScoreLog />
+        </div>
+      </aside>
     </section>
   );
 }
