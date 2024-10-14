@@ -41,6 +41,10 @@ type Player = {
   position: string;
   points: number;
   fouls: number;
+  game: string;
+  assist: number;
+  rebound: number;
+  turnover: number;
 };
 
 type ScoreData = {
@@ -120,7 +124,18 @@ export default function Score() {
           const fouls = playerScores
             .filter(score => score.kinds === 'foul')
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
-          return { ...player, points, fouls }
+          const game = playerScores.some(score => score.kinds === 'starter') ? 'S' : 
+                       playerScores.some(score => score.kinds === 'participation') ? '⚫︎' : ''
+          const assist = playerScores
+            .filter(score => score.kinds === 'assist')
+            .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
+          const rebound = playerScores
+            .filter(score => score.kinds === 'rebound')
+            .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
+          const turnover = playerScores
+            .filter(score => score.kinds === 'turnover')
+            .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
+          return { ...player, points, fouls, game, assist, rebound, turnover }
         })
       }
 
@@ -148,8 +163,8 @@ export default function Score() {
   }, [])
 
   const handleButtonClick = () => {
-    const width = 300;
-    const height = 600;
+    const width = 769;
+    const height = 960;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
 
@@ -176,20 +191,28 @@ export default function Score() {
             <TableHeader className="text-white text-xs">
               <TableRow>
                 <TableHead className="hidden w-1/12 sm:table-cell text-center">No</TableHead>
-                <TableHead className="hidden w-6/12 sm:table-cell text-center">NAME</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">POS</TableHead>
-                <TableHead className="hidden w-3/12 sm:table-cell text-center">PTS</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">G</TableHead>
+                <TableHead className="hidden w-3/12 sm:table-cell text-center">NAME</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">PS</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">PT</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">AS</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">RB</TableHead>
                 <TableHead className="hidden w-1/12 sm:table-cell text-center">PF</TableHead>
+                <TableHead className="hidden w-1/12 sm:table-cell text-center">TO</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="text-ms text-white">
               {playerData.map(player => (
                 <TableRow key={player.id}>
                   <TableCell className="hidden w-1/12 sm:table-cell text-center">#{player.No}</TableCell>
-                  <TableCell className="hidden w-6/12 sm:table-cell text-center">{player.name}</TableCell>
+                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.game}</TableCell>
+                  <TableCell className="hidden w-3/12 sm:table-cell text-center">{player.name}</TableCell>
                   <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.position}</TableCell>
-                  <TableCell className="hidden w-3/12 sm:table-cell text-center">{player.points}</TableCell>
+                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.points}</TableCell>
+                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.assist}</TableCell>
+                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.rebound}</TableCell>
                   <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.fouls}</TableCell>
+                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.turnover}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -211,7 +234,7 @@ export default function Score() {
                 <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
               )}
               <button onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 rounded">
-                コントローラーを開く
+                スコア入力
               </button>
             </div>
             <section className="flex text-white gap-5 mt-3 mb-5">
