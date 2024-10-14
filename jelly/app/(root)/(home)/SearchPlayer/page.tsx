@@ -103,7 +103,7 @@ export default function SearchPlayer() {
 
           return (
             <Card key={player.id} className="bg-gray-700">
-            <Link href="/Player">
+            <Link href={`/Player/${player.id}`}>
               <CardContent className="p-4">
                 <p className="text-gray-300">PlayerId : {player.id}</p>
                 <div className='flex justify-between'>

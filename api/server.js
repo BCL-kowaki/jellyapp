@@ -281,63 +281,58 @@ app.get("/api/auth/game", async (req, res) => {
 });
 
 
+// 新規出場区分API
+app.post("/api/auth/join/register", async (req, res) => {
+  const { date, gameId, playerId, join} = req.body;
 
+  if (!join) {
+    return res.status(400).json({
+      message: "出場区分は必須項目です！",
+    });
+  }
 
-// // 投稿用API
-// app.post("/api/post", async (req, res) => {
-//   const { content } = req.body;
+  try {
+    const join = await prisma.join.create({
+      data: {
+        date,
+        gameId: {
+          connect: {
+            id: parseInt(gameId),
+          },
+        },
+        playerId: {
+          connect: {
+            id: parseInt(playerId),
+          },
+        },
+        join,
+      },
+    });
 
-//   if (!content) {
-//     return res.json(400).json({
-//       message: "投稿内容がありません！",
-//     });
-//   }
+    res.status(201).json(join);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "サーバーエラーです！項目がおかしい、何か見直してください！",
+    });
+  }
+});
 
-//   try {
-//     // 登録の処理を記述していく🤗
-//     const newPost = await prisma.post.create({
-//       data: {
-//         content,
-//         authorId: 1, //MEMO: 最後に修正します🤗
-//       },
-//       include: {
-//         author: true,
-//       },
-//     });
-//     res.status(201).json(newPost);
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({
-//       message: "サーバーエラーです！項目がおかしい、何か見直してください！",
-//     });
-//   }
-// });
-
-// // 取得用API
-// app.get("/api/get_post", async (req, res) => {
-//   try {
-//     // 取得の処理を記述していく🤗
-//     const postData = await prisma.post.findMany({
-//       take: 10,
-//       orderBy: { createdAt: "desc" },
-//       include: {
-//         author: true,
-//       },
-//     });
-//     res.status(201).json(postData);
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({
-//       message: "サーバーエラーです！項目がおかしい、何か見直してください！",
-//     });
-//   }
-// });
-
-
-
-
-
-  
-
+// 出場区分取得用API
+app.get("/api/auth/join", async (req, res) => {
+  try {
+    // 出場区分の取得処理
+    const joinData = await prisma.join.findMany({
+      take: 10,
+      orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json(joinData);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "サーバーエラーです！項目がおかしい、何か見直してください！",
+    });
+  }
+});
 
 app.listen(PORT, () => console.log("server start!!!"));

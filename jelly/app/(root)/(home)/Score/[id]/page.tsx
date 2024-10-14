@@ -6,10 +6,7 @@ import styles from "./style.module.scss"
 import { createClient, PostgrestError } from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
 import {Card, CardDescription, CardContent, CardHeader, CardTitle} from "@/components/ui/card"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { Minus, Plus } from "lucide-react"
 import TotalScore from './TotalScore/page'
 import TeamFoul from './TeamFoul/page'
 import TeamTimeout from './TeamTimeout/page'
@@ -29,7 +26,7 @@ type GameData = {
   id: number;
   teamAId: number;
   teamBId: number;
-  date: string; // 日付フィールドを追加
+  date: string;
 };
 
 type TeamData = {
@@ -55,21 +52,13 @@ type ScoreData = {
 export default function Score() {
   const params = useParams();
   const gameId = params.id as string;
-  const [gameDate, setGameDate] = useState<string>('') // ゲームの日付を保持するstate
+  const [gameDate, setGameDate] = useState<string>('')
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [teamAData, setTeamAData] = useState<TeamData | null>(null)
   const [teamBData, setTeamBData] = useState<TeamData | null>(null)
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  
-  // フォームのstate
-  const [quarter, setQuarter] = useState('')
-  const [category, setCategory] = useState('')
-  const [playerId, setPlayerId] = useState('')
-  const [point, setPoint] = useState(1)
-  const [submitStatus, setSubmitStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   const fetchData = useCallback(async () => {
     try {
@@ -84,7 +73,7 @@ export default function Score() {
       if (!fetchedGameData) throw new Error('No game data found');
 
       setGameData(fetchedGameData);
-      setGameDate(format(new Date(fetchedGameData.date), 'yyyy/MM/dd')); // 日付をフォーマット
+      setGameDate(format(new Date(fetchedGameData.date), 'yyyy/MM/dd'));
 
       // チームデータの取得
       const { data: teamData, error: teamError } = await supabase
@@ -148,71 +137,27 @@ export default function Score() {
   }, [fetchData, refreshTrigger]);
 
   useEffect(() => {
-    // カテゴリーに基づいてデフォルトのポイント値を設定
-    if (category === 'point_2P') {
-      setPoint(2)
-    } else if (category === 'point_3P') {
-      setPoint(3)
-    } else {
-      setPoint(1)
-    }
-  }, [category])
-
-  const handleTeamChange = (value: string) => {
-    setSelectedTeam(parseInt(value));
-    setPlayerId(''); // チーム変更時にプレイヤー選択をリセット
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // フォームのバリデーション
-    if (!quarter || !selectedTeam || !category) {
-      alert('クォーター、チーム、カテゴリーは必須項目です。');
-      return;
-    }
-    if (category !== 'timeout' && !playerId) {
-      alert('タイムアウト以外の場合、選手の選択は必須です。');
-      return;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'updateScore') {
+        fetchData()
+      }
     }
 
-    setSubmitStatus('loading');
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [fetchData])
 
-    try {
-      const { error } = await supabase
-        .from('Score')
-        .insert([
-          {
-            gameId: parseInt(gameId),
-            playerId: category !== 'timeout' ? parseInt(playerId) : null,
-            teamId: selectedTeam,
-            quarter,
-            kinds: category,
-            point: 1, // ポイント値は常に1として送信
-          },
-        ]);
+  const handleButtonClick = () => {
+    const width = 300;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
 
-      if (error) throw error;
-
-      setSubmitStatus('success');
-      // フォームのリセット（クォーターを除く）
-      setCategory('');
-      setPlayerId('');
-      setPoint(1);
-      setSelectedTeam(null);
-      
-      // データの再取得をトリガー
-      setRefreshTrigger(prev => prev + 1);
-
-      // 子コンポーネントの再レンダリングを強制
-      setGameData(prevData => ({ ...prevData! }));
-    } catch (error) {
-      console.error('Error submitting score:', error);
-      setSubmitStatus('error');
-    } finally {
-      // 短い遅延後にsubmitStatusをリセット
-      setTimeout(() => setSubmitStatus('idle'), 2000);
-    }
+    window.open(
+      `/Controller/${gameId}`,
+      'ControllerWindow',
+      `width=${width},height=${height},left=${left},top=${top},resizable=no`
+    );
   };
 
   const renderTeamTable = (teamName: string, teamId: number, playerData: Player[]) => (
@@ -266,160 +211,11 @@ export default function Score() {
               {gameData && teamAData && teamBData && (
                 <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
               )}
+              <button onClick={handleButtonClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold px-2 rounded">
+                コントローラーを開く
+              </button>
               </div>
-              <div className="mb-5">
-                <Card x-chunk="dashboard-07-chunk-2">
-                  <section className="flex flex-col gap-10 p-8 text-white">
-                    <form className="mt-4 mb-2" onSubmit={handleSubmit}>
-                      <div className="flex justify-between gap-10">
-                        <div className="flex justify-between size-2/3">
-                          <div className={styles.flexWHalf}>
-                            <div className="mb-4">
-                              <Select
-                                value={quarter}
-                                onValueChange={setQuarter}
-                                required
-                              >
-                                <SelectTrigger
-                                  id="quarter"
-                                  aria-label="Select quarter"
-                                >
-                                  <SelectValue placeholder="クォーター" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="first">1クォーター</SelectItem>
-                                  <SelectItem value="second">2クォーター</SelectItem>
-                                  <SelectItem value="third">3クォーター</SelectItem>
-                                  <SelectItem value="fourth">4クォーター</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="mb-4">
-                              <Select 
-                                onValueChange={handleTeamChange}
-                                required
-                              >
-                                <SelectTrigger
-                                  id="team"
-                                  aria-label="Select team"
-                                >
-                                  <SelectValue placeholder="チーム" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {teamAData && (
-                                    <SelectItem value={teamAData.id.toString()}>
-                                      {teamAData.teamName}
-                                    </SelectItem>
-                                  )}
-                                  {teamBData && (
-                                    <SelectItem value={teamBData.id.toString()}>
-                                      {teamBData.teamName}
-                                    </SelectItem>
-                                  )}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          <div className={styles.flexWHalf}>
-                            <div className="mb-4">
-                              <Select
-                                value={category}
-                                onValueChange={setCategory}
-                                required
-                              >
-                                <SelectTrigger
-                                  id="category"
-                                  aria-label="Select category"
-                                >
-                                  <SelectValue placeholder="カテゴリー" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="point_2P">得点_2P</SelectItem>
-                                  <SelectItem value="point_3P">得点_3P</SelectItem>
-                                  <SelectItem value="point_FT">得点_FT</SelectItem>
-                                  <SelectItem value="foul">ファール</SelectItem>
-                                  <SelectItem value="timeout">タイムアウト</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="mb-4">
-                              <Select
-                                value={playerId}
-                                onValueChange={setPlayerId}
-                                required={category !== 'timeout'}
-                              >
-                                <SelectTrigger
-                                  id="player"
-                                  aria-label="Select player"
-                                >
-                                  <SelectValue placeholder="選手" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {selectedTeam === teamAData?.id &&
-                                    processedPlayerDataA.map((player) => (
-                                      <SelectItem
-                                        key={player.id}
-                                        value={player.id.toString()}
-                                      >
-                                        
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                  {selectedTeam === teamBData?.id &&
-                                    processedPlayerDataB.map((player) => (
-                                      <SelectItem
-                                        key={player.id}
-                                        value={player.id.toString()}
-                                      >
-                                        {player.name}
-                                      </SelectItem>
-                                    ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="size-1/3">
-                          <div className="flex items-center">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 shrink-0 rounded-full text-black bg-white"
-                              onClick={() => setPoint((prev) => Math.max(0, prev - 1))}
-                              disabled={point <= 0}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <div className="flex-1 text-center">
-                              <div className={styles.goal}>{point}</div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8 shrink-0 rounded-full text-black bg-white"
-                              onClick={() => setPoint((prev) => Math.min(prev + 1, 3))}
-                              disabled={point >= 3}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        type="submit"
-                        variant="outline"
-                        className="mt-4 bg-black size-full pt-4 pb-4 text-xl"
-                        disabled={submitStatus === "loading"}
-                      >
-                        {submitStatus === "loading" ? "Submitting..." : "Submit"}
-                      </Button>
-                    </form>
-                  </section>
-                </Card>
-              </div>
-              <section className="flex text-white gap-5 mb-5">
+              <section className="flex text-white gap-5 mt-3 mb-5">
                 <div className="size-full">
                   <TotalScore key={refreshTrigger} />
                 </div>

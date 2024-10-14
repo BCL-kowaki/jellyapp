@@ -48,6 +48,7 @@ model Player {
   team        Team     @relation(fields: [teamId], references: [id])
   createdAt   DateTime @default(now())
   scores    Score[]  @relation("PlayerToScore")
+  joins   Join[] @relation("JoinToPlayer")
 }
 
 
@@ -75,4 +76,16 @@ model Game {
   teamB     Team     @relation("TeamBToGame", fields: [teamBId], references: [id])
   createdAt DateTime @default(now())
   scores    Score[]  @relation("ScoreToGame")
+  joins   Join[] @relation("JoinToGame")
+}
+
+
+model Join {
+  id        Int      @id @default(autoincrement())
+  gameId    Int      @default(1)
+  game      Game     @relation("JoinToGame", fields: [gameId], references: [id])
+  playerId  Int
+  player    Player   @relation("JoinToPlayer", fields: [playerId], references: [id])
+  join      String
+  createdAt DateTime @default(now())
 }

@@ -74,11 +74,11 @@ export default function AddNewScore() {
     setTeamNames(prev => ({ ...prev, [name === 'teamAId' ? 'teamA' : 'teamB']: '' }))
   }
 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setFormData(prev => ({ ...prev, date }))
-    }
+const handleDateChange = (date: Date | undefined) => {
+  if (date) {
+    setFormData(prev => ({ ...prev, date }))
   }
+}
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()

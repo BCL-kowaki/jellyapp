@@ -72,16 +72,14 @@ export default function SearchTeam() {
         <div className="text-red-500 mb-4">{error}</div>
       )}
       <div className="space-y-4">
-
         {filteredTeams.map(team => (
           <Card key={team.id}>
-          <Link href="/Team">
-            <CardContent className="p-4">
-              <p className="text-gray-400">TeamId : {team.id}</p>
-              <h2 className="text-3xl font-semibold mt-1 text-white">{team.teamName}</h2>
-            </CardContent>
-
-      </Link>
+            <Link href={`/Team/${team.id}`}>
+              <CardContent className="p-4">
+                <p className="text-gray-400">TeamId : {team.id}</p>
+                <h2 className="text-3xl font-semibold mt-1 text-white">{team.teamName}</h2>
+              </CardContent>
+            </Link>
           </Card>
         ))}
       </div>

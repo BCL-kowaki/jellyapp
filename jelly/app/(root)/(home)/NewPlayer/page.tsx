@@ -247,7 +247,7 @@ export default function NewPlayer() {
                   <p className="text-xs text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
                 </div>
               )}
-              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
+              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="images/palyer/*" />
             </label>
           </div>
         </div>

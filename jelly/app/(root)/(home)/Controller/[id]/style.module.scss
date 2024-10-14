@@ -1,0 +1,59 @@
+section.sticky{
+  display: none!important;
+}
+
+.mainContent {
+  max-width: 640px;
+  padding: 20px 0 40px 0;
+
+  .mainContent__inner {
+    width: 90%;
+    margin: 0 auto;
+  }
+}
+
+.separator{
+  height: 1px;
+  background: #555;
+  margin: 30px auto;
+}
+
+.radioGroup24{
+  font-size: 24px;
+  color: #fff;
+  font-weight: 900;
+}
+.radioGroup20{
+  font-size: 20px;
+  color: #fff;
+  font-weight: 900;
+}
+
+@media screen and (max-width: 450px) {
+
+  .radioGroup24{
+    font-size: 20px;
+    color: #fff;
+    font-weight: 900;
+  }
+  .radioGroup20{
+    font-size: 18px;
+    color: #fff;
+    font-weight: 900;
+  }
+
+}
+
+
+.goal{
+  font-size: 120px;
+  font-weight: 900;
+  color: #fff;
+  margin: 0;
+  padding: 0;
+  line-height: 100%;
+}
+
+
+// add
+
