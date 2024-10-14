@@ -354,6 +354,14 @@ export default function Controller() {
                               <RadioGroupItem value="foul" id="category-foul" />
                               <Label htmlFor="category-foul">ファール</Label>
                             </div>
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
+                              <RadioGroupItem value="starter" id="category-starter" />
+                              <Label htmlFor="category-starter">スタメン出場</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 mb-3 w-1/2">
+                              <RadioGroupItem value="participation" id="category-participation" />
+                              <Label htmlFor="category-participation">交代出場</Label>
+                            </div>
                           </div>
                         </RadioGroup>
                       </div>
