@@ -229,6 +229,15 @@
   }
 
 
+  @media screen and (min-width: 640px) {
+
+    .w-\[calc\(100\%-78px\)\] {
+      margin-left: 78px;
+    }
+    .ml-\[264px\] {
+      margin-left: 264px;
+  }
+}
   @media screen and (max-width: 640px) {
 
     .w-\[calc\(100\%-78px\)\] {
@@ -237,5 +246,4 @@
     .ml-\[264px\] {
       margin-left: 0!important;
   }
-    
-      }
+}
