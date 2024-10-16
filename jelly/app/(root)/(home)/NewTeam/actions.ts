@@ -13,6 +13,8 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function createTeam(formData: FormData) {
+  const area = formData.get('area') as string
+  const prefecture = formData.get('prefecture') as string
   const teamName = formData.get('teamName') as string
   const category = formData.get('category') as string
   const image = formData.get('image') as File
@@ -27,6 +29,8 @@ export async function createTeam(formData: FormData) {
     const { data, error } = await supabase
       .from('Team')
       .insert({
+        area: area,
+        prefecture: prefecture,
         teamName: teamName,
         category: category,
         image: imageBase64

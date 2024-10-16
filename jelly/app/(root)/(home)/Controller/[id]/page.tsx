@@ -71,6 +71,14 @@ export default function Controller() {
 
   const [showQRCode, setShowQRCode] = useState(false)
   const [currentUrl, setCurrentUrl] = useState('')
+  const [showAllOptions, setShowAllOptions] = useState(true)
+
+  // New state for Results form
+  const [winTeam, setWinTeam] = useState<string>("")
+  const [loseTeam, setLoseTeam] = useState<string>("")
+  const [resultSubmitStatus, setResultSubmitStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle")
 
   const topRef = useRef<HTMLDivElement>(null)
 
@@ -134,6 +142,12 @@ export default function Controller() {
   useEffect(() => {
     if (quarter === "starter") {
       setCategory("starter")
+    }
+  }, [quarter])
+
+  useEffect(() => {
+    if (quarter === "starter") {
+      setCategory("starter")
     } else {
       setCategory("")
     }
@@ -142,20 +156,25 @@ export default function Controller() {
   }, [quarter])
 
   const handleTeamChange = (teamId: string) => {
-    setSelectedTeam(parseInt(teamId))
+    setSelectedTeam(prev => prev === parseInt(teamId) ? null : parseInt(teamId));
+    setShowAllOptions(false);
     setSelectedPlayers([])
   }
 
   const handleCategoryChange = (value: string) => {
-    setCategory(value)
-    if (value === 'point_2P') {
-      setPoint(2)
-    } else if (value === 'point_3P') {
-      setPoint(3)
-    } else {
-      setPoint(1)
+    if (quarter === "starter" && value !== "starter") {
+      return; // スタメン登録時は他のカテゴリーを選択できないようにする
     }
-    setSelectedPlayers([])
+    setCategory(prev => prev === value ? "" : value);
+    setShowAllOptions(false);
+    if (value === 'point_2P') {
+      setPoint(2);
+    } else if (value === 'point_3P') {
+      setPoint(3);
+    } else {
+      setPoint(1);
+    }
+    setSelectedPlayers([]);
   }
 
   const handlePlayerSelection = (playerId: string) => {
@@ -180,7 +199,7 @@ export default function Controller() {
       !quarter ||
       !selectedTeam ||
       !category ||
-      (category !== "timeout" && selectedPlayers.length === 0)
+      (category !== "timeout" && category !== "starter" && selectedPlayers.length === 0)
     ) {
       alert("全ての必須項目を入力してください。")
       return
@@ -229,6 +248,38 @@ export default function Controller() {
 
   const closeQRCode = () => {
     setShowQRCode(false)
+  }
+
+  const handleResultSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!winTeam || !loseTeam) {
+      alert("勝利チームと敗北チームの両方を選択してください。")
+      return
+    }
+
+    setResultSubmitStatus("loading")
+
+    try {
+      const { error } = await supabase.from("Results").insert({
+        gameId: parseInt(gameId),
+        winTeam: parseInt(winTeam),
+        loseTeam: parseInt(loseTeam)
+      })
+
+      if (error) throw error
+
+      setResultSubmitStatus("success")
+      // Reset form fields
+      setWinTeam("")
+      setLoseTeam("")
+    } catch (error) {
+      console.error("Error submitting result:", error)
+      setResultSubmitStatus("error")
+    } finally {
+      setTimeout(() => {
+        setResultSubmitStatus("idle")
+      }, 2000)
+    }
   }
 
   return (
@@ -292,73 +343,94 @@ export default function Controller() {
                           value={category}
                         >
                           <div className="space-y-2 flex flex-wrap justify-between">
-                            <div className="flex items-center space-x-2 w-1/2">
-                              <RadioGroupItem
-                                value="point_2P"
-                                id="category-2P"
-                              />
-                              <Label htmlFor="category-2P">得点_2P</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="rebound"
-                                id="category-rebound"
-                              />
-                              <Label htmlFor="category-rebound">
-                                リバウンド
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="point_3P"
-                                id="category-3P"
-                              />
-                              <Label htmlFor="category-3P">得点_3P</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="assist"
-                                id="category-assist"
-                              />
-                              <Label htmlFor="category-assist">アシスト</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="point_FT"
-                                id="category-FT"
-                              />
-                              <Label  htmlFor="category-FT">得点_FT</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="turnover"
-                                id="category-turnover"
-                              />
-                              <Label htmlFor="category-turnover">
-                                ターンオーバー
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem
-                                value="timeout"
-                                id="category-timeout"
-                              />
-                              <Label htmlFor="category-timeout">
-                                タイムアウト
-                              </Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem value="foul" id="category-foul" />
-                              <Label htmlFor="category-foul">ファール</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem value="starter" id="category-starter" />
-                              <Label htmlFor="category-starter">スタメン出場</Label>
-                            </div>
-                            <div className="flex items-center space-x-2 mb-3 w-1/2">
-                              <RadioGroupItem value="participation" id="category-participation" />
-                              <Label htmlFor="category-participation">交代出場</Label>
-                            </div>
+                            {(showAllOptions || !category || category === "point_2P") && (
+                              <div className="flex items-center space-x-2 w-1/2">
+                                <RadioGroupItem
+                                  value="point_2P"
+                                  id="category-2P"
+                                />
+                                <Label htmlFor="category-2P">得点_2P</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "rebound") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="rebound"
+                                  id="category-rebound"
+                                />
+                                <Label htmlFor="category-rebound">
+                                  リバウンド
+                                </Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "point_3P") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="point_3P"
+                                  id="category-3P"
+                                />
+                                <Label htmlFor="category-3P">得点_3P</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "assist") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="assist"
+                                  id="category-assist"
+                                />
+                                <Label htmlFor="category-assist">アシスト</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "point_FT") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="point_FT"
+                                  id="category-FT"
+                                
+                                />
+                                <Label  htmlFor="category-FT">得点_FT</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "turnover") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="turnover"
+                                  id="category-turnover"
+                                />
+                                <Label htmlFor="category-turnover">
+                                  ターンオーバー
+                                </Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "timeout") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="timeout"
+                                  id="category-timeout"
+                                />
+                                <Label htmlFor="category-timeout">
+                                  タイムアウト
+                                </Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "foul") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem value="foul" id="category-foul" />
+                                <Label htmlFor="category-foul">ファール</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "starter") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem value="starter" id="category-starter" />
+                                <Label htmlFor="category-starter">スタメン出場</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "participation") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem value="participation" id="category-participation" />
+                                <Label htmlFor="category-participation">交代出場</Label>
+                              </div>
+                            )}
                           </div>
                         </RadioGroup>
                       </div>
@@ -370,7 +442,7 @@ export default function Controller() {
                           onValueChange={handleTeamChange}
                           value={selectedTeam?.toString() || ""}
                         >
-                          {teamAData && (
+                          {(showAllOptions || !selectedTeam || selectedTeam === teamAData?.id) && teamAData && (
                             <div className={styles.radioGroup24}>
                               <div className="flex items-center mb-2">
                                 <RadioGroupItem
@@ -384,7 +456,7 @@ export default function Controller() {
                               </div>
                             </div>
                           )}
-                          {teamBData && (
+                          {(showAllOptions || !selectedTeam || selectedTeam === teamBData?.id) && teamBData && (
                             <div className={styles.radioGroup24}>
                               <div className="flex items-center mb-2">
                                 <RadioGroupItem
@@ -457,6 +529,20 @@ export default function Controller() {
                       </div>
                     )}
                     <div className={styles.separator}></div>
+                    {(!showAllOptions && (category || selectedTeam)) && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="mt-4 mb-4 w-full"
+                        onClick={() => {
+                          setShowAllOptions(true);
+                          setCategory("");
+                          setSelectedTeam(null);
+                        }}
+                      >
+                        選択をリセット
+                      </Button>
+                    )}
                     <Button
                       type="submit"
                       variant="outline"
@@ -464,6 +550,55 @@ export default function Controller() {
                       disabled={submitStatus === "loading"}
                     >
                       {submitStatus === "loading" ? "送信中..." : "送信"}
+                    </Button>
+                  </form>
+                </section>
+              </Card>
+            </div>
+            <div className="mb-5">
+              <Card>
+                <section className={styles.mainContent__inner}>
+                  <form className="mt-4 mb-2 pt-8 pb-8 text-white" onSubmit={handleResultSubmit}>
+                    <h4 className="text-xl font-bold mb-4">試合結果登録</h4>
+                    <div className="mb-4">
+                      <Label htmlFor="winTeam">勝利チーム</Label>
+                      <Select value={winTeam} onValueChange={setWinTeam}>
+                        <SelectTrigger id="winTeam" className="w-full mt-1">
+                          <SelectValue placeholder="勝利チームを選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teamAData && (
+                            <SelectItem value={teamAData.id.toString()}>{teamAData.teamName}</SelectItem>
+                          )}
+                          {teamBData && (
+                            <SelectItem value={teamBData.id.toString()}>{teamBData.teamName}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="mb-4">
+                      <Label htmlFor="loseTeam">敗北チーム</Label>
+                      <Select value={loseTeam} onValueChange={setLoseTeam}>
+                        <SelectTrigger id="loseTeam" className="w-full mt-1">
+                          <SelectValue placeholder="敗北チームを選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teamAData && (
+                            <SelectItem value={teamAData.id.toString()}>{teamAData.teamName}</SelectItem>
+                          )}
+                          {teamBData && (
+                            <SelectItem value={teamBData.id.toString()}>{teamBData.teamName}</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      className="mt-4 bg-black size-full pt-4 pb-4 text-xl"
+                      disabled={resultSubmitStatus === "loading"}
+                    >
+                      {resultSubmitStatus === "loading" ? "送信中..." : "結果を登録"}
                     </Button>
                   </form>
                 </section>
@@ -480,6 +615,16 @@ export default function Controller() {
       {submitStatus === "error" && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg">
           エラーが発生しました
+        </div>
+      )}
+      {resultSubmitStatus === "success" && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg">
+          試合結果登録完了
+        </div>
+      )}
+      {resultSubmitStatus === "error" && (
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-md shadow-lg">
+          結果登録中にエラーが発生しました
         </div>
       )}
     </section>

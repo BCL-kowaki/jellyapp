@@ -19,6 +19,19 @@ interface Team {
   teamName: string;
 }
 
+interface Result {
+  gameId: string;
+  winTeam: string;
+  loseTeam: string;
+}
+
+interface Score {
+  gameId: string;
+  teamId: string;
+  kinds: string;
+  point: number;
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -33,40 +46,36 @@ export default function SearchScore() {
   const [games, setGames] = useState<Game[]>([]);
   const [filteredGames, setFilteredGames] = useState<Game[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
+  const [scores, setScores] = useState<Score[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchGames = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase.from("Game").select("*");
+        const [gamesResponse, teamsResponse, resultsResponse, scoresResponse] = await Promise.all([
+          supabase.from("Game").select("*"),
+          supabase.from("Team").select("*"),
+          supabase.from("Results").select("*"),
+          supabase.from("Score").select("*")
+        ]);
 
-        if (error) throw error;
+        if (gamesResponse.error) throw gamesResponse.error;
+        if (teamsResponse.error) throw teamsResponse.error;
+        if (resultsResponse.error) throw resultsResponse.error;
+        if (scoresResponse.error) throw scoresResponse.error;
 
-        setGames(data || []);
+        setGames(gamesResponse.data || []);
+        setTeams(teamsResponse.data || []);
+        setResults(resultsResponse.data || []);
+        setScores(scoresResponse.data || []);
       } catch (error) {
-        console.error("Error fetching games:", error);
-        setError("試合データの取得中にエラーが発生しました。");
+        console.error("Error fetching data:", error);
+        setError("データの取得中にエラーが発生しました。");
       }
     };
 
-    fetchGames();
-  }, []);
-
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const { data, error } = await supabase.from("Team").select("*");
-
-        if (error) throw error;
-
-        setTeams(data || []);
-      } catch (error) {
-        console.error("Error fetching teams:", error);
-        setError("チームデータの取得中にエラーが発生しました。");
-      }
-    };
-
-    fetchTeams();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -93,6 +102,20 @@ export default function SearchScore() {
     setFilteredGames(filtered);
   }, [searchTerm, games, teams]);
 
+  const getResultSymbol = (gameId: string, teamId: string) => {
+    const result = results.find(r => r.gameId === gameId);
+    if (!result) return "";
+    if (result.winTeam === teamId) return "⚪︎";
+    if (result.loseTeam === teamId) return "⚫︎";
+    return "";
+  };
+
+  const calculateTotalScore = (gameId: string, teamId: string) => {
+    return scores
+      .filter(s => s.gameId === gameId && s.teamId === teamId && ['point_2P', 'point_3P', 'point_1P'].includes(s.kinds))
+      .reduce((total, score) => total + score.point, 0);
+  };
+
   return (
     <div className="min-h-screen text-white p-8 contentInner">
       <h1 className="text-3xl font-bold mb-8">試合検索</h1>
@@ -111,6 +134,8 @@ export default function SearchScore() {
         {filteredGames.map((game) => {
           const teamA = teams.find((team) => team.id === game.teamAId);
           const teamB = teams.find((team) => team.id === game.teamBId);
+          const scoreA = calculateTotalScore(game.id, game.teamAId);
+          const scoreB = calculateTotalScore(game.id, game.teamBId);
 
           return (
             <Card key={game.id} className="bg-gray-700">
@@ -119,7 +144,7 @@ export default function SearchScore() {
                   <div>
                     <p className="text-gray-300">GameId : {game.id}</p>
                     <h2 className="text-3xl text-white font-semibold mt-1">
-                      {teamA?.teamName} vs {teamB?.teamName}
+                      <span className="text-3xl">{teamA?.teamName}</span> {getResultSymbol(game.id, game.teamAId)} {scoreA} - {scoreB} {getResultSymbol(game.id, game.teamBId)} <span className="text-3xl">{teamB?.teamName}</span>
                     </h2>
                   </div>
                   <p className="text-xl text-gray-300 mt-9">

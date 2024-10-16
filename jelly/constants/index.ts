@@ -1,4 +1,4 @@
-export const sideberLinks = [
+export const sidebarLinks = [
     {
         label: 'Home',
         route: '/',
@@ -20,8 +20,10 @@ export const sideberLinks = [
         imgUrl: '/icons/Video.svg',
     },
     {
-        label: 'Personal Room',
-        route: '/Score',
+        label: 'AI Jelly',
+        route: '/Ai',
         imgUrl: '/icons/add-personal.svg',
+        openInNewWindow: true,
+        windowFeatures: 'width=375,height=720,resizable=yes,scrollbars=yes,status=yes'
     },
 ];

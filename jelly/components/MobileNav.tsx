@@ -2,7 +2,7 @@
 
 import { Sheet, SheetClose, SheetContent, SheetTrigger} 
 from "@/components/ui/sheet"
-import { sideberLinks } from "@/constants"
+import { sidebarLinks } from "@/constants"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
@@ -39,7 +39,7 @@ const MobileNav = () => {
             <div className="flex h-[calc(100vh-72px)] flex-col justify-between overflow-y-auto">
                 <SheetClose asChild>
                     <section className="flex h-full flex-col gap^6 pt-16 text-white">
-                    {sideberLinks.map((link) => {
+                    {sidebarLinks.map((link) => {
                             const isActive = pathname === link.route;
 
                             return (

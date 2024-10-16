@@ -1,5 +1,5 @@
 import React from 'react'
-import { sideberLinks } from '@/constants'
+import { sidebarLinks } from '@/constants'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -22,8 +22,40 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       )}
     >
       <div className='flex flex-col gap-6 text-white'>
-        {sideberLinks.map((link) => {
+        {sidebarLinks.map((link) => {
           const isActive = pathname === link.route || pathname.startsWith(`${link.route}/`)
+
+          if (link.label === 'AI Jelly') {
+            return (
+              <a
+                href={link.route}
+                key={link.label}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(link.route, '_blank', 'width=375,height=812,resizable=yes,scrollbars=yes,status=yes');
+                }}
+                className={cn('flex items-center gap-4 rounded-lg px-2 py-6', {
+                  'bg-blue-1': isActive,
+                  'justify-center': !isOpen,
+                })}
+              >
+                <Image
+                  src={link.imgUrl}
+                  alt={link.label}
+                  width={24}
+                  height={24}
+                  className={cn('transition-all duration-300', {
+                    'brightness-0 invert': !isOpen,
+                  })}
+                />
+                {isOpen && (
+                  <p className="text-lg font-semibold">
+                    {link.label}
+                  </p>
+                )}
+              </a>
+            )
+          }
 
           return (
             <Link

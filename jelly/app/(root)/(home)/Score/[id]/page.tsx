@@ -53,6 +53,13 @@ type ScoreData = {
   playerId: number;
   kinds: string;
   point: number;
+  teamId: number;
+};
+
+type ResultData = {
+  gameId: number;
+  winTeam: number;
+  loseTeam: number;
 };
 
 export default function Score() {
@@ -64,6 +71,9 @@ export default function Score() {
   const [teamBData, setTeamBData] = useState<TeamData | null>(null)
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
+  const [teamAScore, setTeamAScore] = useState<number>()
+  const [teamBScore, setTeamBScore] = useState<number>()
+  const [resultData, setResultData] = useState<ResultData | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -112,18 +122,30 @@ export default function Score() {
       // Fetch score data
       const { data: scoreData, error: scoreError } = await supabase
         .from('Score')
-        .select('playerId, kinds, point')
+        .select('playerId, kinds, point, teamId')
         .eq('gameId', gameId) as { data: ScoreData[] | null, error: PostgrestError | null };
 
       if (scoreError) throw scoreError;
 
-      // Process player data
-      const processPlayerData = (playerData: Player[]): Player[] => {
-        return playerData.map(player => {
+      // Fetch result data
+      const { data: resultData, error: resultError } = await supabase
+        .from('Results')
+        .select('gameId, winTeam, loseTeam')
+        .eq('gameId', gameId)
+        .single() as { data: ResultData | null, error: PostgrestError | null };
+
+      if (resultError) throw resultError;
+      setResultData(resultData);
+
+      // Process player data and calculate team scores
+      const processPlayerData = (playerData: Player[], teamId: number): Player[] => {
+        let teamScore = 0;
+        const processedData = playerData.map(player => {
           const playerScores = scoreData?.filter(score => score.playerId === player.id) || []
           const points = playerScores
             .filter(score => ['point_2P', 'point_3P', 'point_1P'].includes(score.kinds))
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
+          teamScore += points;
           const fouls = playerScores
             .filter(score => score.kinds === 'foul')
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
@@ -140,10 +162,16 @@ export default function Score() {
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
           return { ...player, points, fouls, game, assist, rebound, turnover }
         })
+        if (teamId === fetchedGameData.teamAId) {
+          setTeamAScore(teamScore);
+        } else {
+          setTeamBScore(teamScore);
+        }
+        return processedData;
       }
 
-      setProcessedPlayerDataA(processPlayerData(playerDataA));
-      setProcessedPlayerDataB(processPlayerData(playerDataB));
+      setProcessedPlayerDataA(processPlayerData(playerDataA, fetchedGameData.teamAId));
+      setProcessedPlayerDataB(processPlayerData(playerDataB, fetchedGameData.teamBId));
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -176,6 +204,13 @@ export default function Score() {
       'ControllerWindow',
       `width=${width},height=${height},left=${left},top=${top},resizable=no`
     );
+  };
+
+  const getResultSymbol = (teamId: number) => {
+    if (!resultData) return '';
+    if (resultData.winTeam === teamId) return '⚪︎';
+    if (resultData.loseTeam === teamId) return '⚫︎';
+    return '';
   };
 
   const renderTeamTable = (teamName: string, teamId: number, playerData: Player[]) => (
@@ -234,7 +269,9 @@ export default function Score() {
             <div className='flex justify-between'>
               <h2 className="text-xl font-bold mb-2 mt-5">Game ID: {gameId}</h2>
               {gameData && teamAData && teamBData && (
-                <h3 className="text-3xl font-bold mb-6 mt-4 ml-10"> {teamAData.teamName} - {teamBData.teamName}</h3>
+                <h3 className="text-3xl font-bold mb-6 mt-4 ml-10">
+                  {teamAData.teamName} {teamAScore} {getResultSymbol(teamAData.id)} - {getResultSymbol(teamBData.id)} {teamBScore} {teamBData.teamName}
+                </h3>
               )}
               <button
                 onClick={handleButtonClick}
@@ -271,7 +308,6 @@ export default function Score() {
         <ClipboardList className="h-6 w-6 text-white" />
       </button>
       <aside className={`fixed top-0 right-0 bg-dark-1 h-full overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-2/5' : 'w-0'}`}>
-        
         <div className="p-8">
           <ScoreLog />
         </div>
