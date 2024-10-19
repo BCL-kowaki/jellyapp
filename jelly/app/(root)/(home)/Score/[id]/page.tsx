@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import styles from "./style.module.scss"
-import { createClient} from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
 import { Card, CardDescription, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -69,20 +69,23 @@ export default function Component() {
   const [resultData, setResultData] = useState<ResultData | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
     try {
       // Fetch game data
       const { data: fetchedGameData, error: gameError } = await supabase
         .from('Game')
         .select('id, teamAId, teamBId, date')
         .eq('id', gameId)
-        .maybeSingle();
+        .single();
 
       if (gameError) throw gameError;
       if (!fetchedGameData) {
-        console.error('No game data found');
-        return;
+        throw new Error('No game data found');
       }
 
       setGameData(fetchedGameData);
@@ -137,7 +140,7 @@ export default function Component() {
         .from('Results')
         .select('gameId, winTeam, loseTeam')
         .eq('gameId', gameId)
-        .maybeSingle();
+        .single();
 
       if (resultError) throw resultError;
       setResultData(resultData);
@@ -184,6 +187,9 @@ export default function Component() {
 
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('データの取得中にエラーが発生しました。');
+    } finally {
+      setIsLoading(false)
     }
   }, [gameId]);
 
@@ -272,6 +278,14 @@ export default function Component() {
     )
   }
 
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-red-500">{error}</div>
+  }
+
   return (
     <section className="flex h-screen text-white">
       <section className="flex-grow px-4">
@@ -309,7 +323,8 @@ export default function Component() {
             <section className="flex text-white gap-5">
               {teamAData && processedPlayerDataA.length > 0 && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
               
-              {teamBData && processedPlayerDataB.length > 0 && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
+              {teamBData && processedPlayerDataB.length > 0 && renderTeamTable(teamBData.teamName, 
+teamBData.id, processedPlayerDataB)}
             </section>
           </div>
         </div>
