@@ -63,21 +63,70 @@ export async function createPlayer(formData: FormData) {
 }
 
 export async function getTeams(search: string) {
-    try {
-      const { data, error } = await supabase
-        .from('Team')
-        .select('id, teamName')
-        .ilike('teamName', `%${search}%`)
-        .limit(5)
-  
-      if (error) {
-        console.error('チーム検索エラー:', error)
-        return { success: false, error: 'チーム検索エラー: ' + error.message }
-      }
-  
-      return { success: true, data }
-    } catch (error) {
+  try {
+    const { data, error } = await supabase
+      .from('Team')
+      .select('id, teamName')
+      .ilike('teamName', `%${search}%`)
+      .limit(5)
+
+    if (error) {
       console.error('チーム検索エラー:', error)
-      return { success: false, error: error instanceof Error ? error.message : '不明なエラー' }
+      return { success: false, error: 'チーム検索エラー: ' + error.message }
     }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('チーム検索エラー:', error)
+    return { success: false, error: error instanceof Error ? error.message : '不明なエラー' }
   }
+}
+
+export async function downloadCsvTemplate() {
+  const headers = ['name', 'No', 'image', 'position', 'category', 'height', 'teamId', 'birthplace', 'career']
+  return headers.join(',') + '\n'
+}
+
+export async function uploadCsvPlayers(formData: FormData) {
+  const file = formData.get('csv') as File
+  if (!file) {
+    return { success: false, error: 'ファイルがアップロードされていません' }
+  }
+
+  const content = await file.text()
+  const rows = content.split('\n').map(row => row.split(','))
+  
+  // ヘッダー行をスキップ
+  const players = rows.slice(1).map(row => ({
+    name: row[0],
+    No: parseInt(row[1]),
+    image: row[2],
+    position: row[3],
+    category: row[4],
+    height: parseInt(row[5]),
+    teamId: parseInt(row[6]),
+    birthplace: row[7],
+    career: row[8]
+  }))
+
+  try {
+    for (const player of players) {
+      const { error } = await supabase
+        .from('Player')
+        .insert(player)
+
+      if (error) {
+        console.error('プレイヤー挿入エラー:', error)
+        return { success: false, error: 'プレイヤーの挿入中にエラーが発生しました: ' + error.message }
+      }
+    }
+
+    // キャッシュの再検証
+    revalidatePath('/SearchPlayer')
+
+    return { success: true }
+  } catch (error) {
+    console.error('プレイヤーのアップロードエラー:', error)
+    return { success: false, error: error instanceof Error ? error.message : '不明なエラー' }
+  }
+}

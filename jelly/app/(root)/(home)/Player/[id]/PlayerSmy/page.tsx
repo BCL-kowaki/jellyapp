@@ -98,7 +98,7 @@ export default async function PlayerSmy({ params }: { params: { id: string } }) 
       <section className={styles.playerContent__inner}>
         <div className={styles.playerContent__inner__img}>
           <Image
-            src={`/images/${playerData.images}`}
+            src={`/images/player/${playerData.images}`}
             alt={`${playerData.name}の画像`}
             width={150}
             height={150}

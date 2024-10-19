@@ -150,12 +150,15 @@ export default function Player() {
       <section className={styles.playerContent}>
         <section className={styles.playerContent__inner}>
           <div className={styles.playerContent__inner__img}>
+          <div className="relative w-40 h-40 rounded-full overflow-hidden">
             <Image
-              src={playerData.image ? `/images/${playerData.image}` : '/images/default-player.png'}
+              src={playerData.image ? `/images/player/${playerData.image}` : '/images/default-player.png'}
               alt={`${playerData.name || 'Unknown player'}の画像`}
-              width={150}
-              height={150}
+              layout="fill"
+              objectFit="cover"
+              className="rounded-full"
             />
+            </div>
           </div>
           <div className={styles.playerContent__inner__smy}>
             <div className={styles.playerContent__inner__smy__name}>

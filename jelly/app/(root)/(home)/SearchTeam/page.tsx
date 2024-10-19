@@ -78,19 +78,9 @@ export default function SearchTeam() {
     <div className="min-h-screen text-white p-8 contentInner">
       <h1 className="text-3xl font-bold mb-8">チーム検索</h1>
       <div className="flex flex-col space-y-4 mb-6">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="チーム名かチームIdを入力してください"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full text-white pl-10 pr-4 py-2 rounded-lg pt-5 pb-5 text-xl font-bold"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        </div>
         <div className="flex space-x-4">
           <Select onValueChange={setSelectedArea} value={selectedArea}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full font-normal text-base">
               <SelectValue placeholder="エリアを選択" />
             </SelectTrigger>
             <SelectContent>
@@ -101,7 +91,7 @@ export default function SearchTeam() {
             </SelectContent>
           </Select>
           <Select onValueChange={setSelectedPrefecture} value={selectedPrefecture}>
-            <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full font-normal text-base">
               <SelectValue placeholder="都道府県を選択" />
             </SelectTrigger>
             <SelectContent>
@@ -111,6 +101,16 @@ export default function SearchTeam() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="relative">
+          <Input
+            type="text"
+            placeholder="チーム名かチームIdを入力してください"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full text-white pl-10 pr-4 py-2 rounded-lg pt-6 pb-6 font-normal text-base"
+          />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
       </div>
       {error && (

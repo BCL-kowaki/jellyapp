@@ -208,23 +208,23 @@ export default function Controller() {
     setSubmitStatus("loading")
 
     try {
-      const records = category === "starter"
-        ? selectedPlayers.map(playerId => ({
-            gameId: parseInt(gameId),
-            playerId: parseInt(playerId),
-            teamId: selectedTeam,
-            quarter,
-            kinds: category,
-            point: 0,
-          }))
-        : [{
-            gameId: parseInt(gameId),
-            playerId: category !== "timeout" ? parseInt(selectedPlayers[0]) : null,
-            teamId: selectedTeam,
-            quarter,
-            kinds: category,
-            point: point,
-          }]
+      const records = category === "starter" || category === "participation"
+      ? selectedPlayers.map(playerId => ({
+          gameId: parseInt(gameId),
+          playerId: parseInt(playerId),
+          teamId: selectedTeam,
+          quarter,
+          kinds: category,
+          point: 1,
+        }))
+      : [{
+          gameId: parseInt(gameId),
+          playerId: category !== "timeout" ? parseInt(selectedPlayers[0]) : null,
+          teamId: selectedTeam,
+          quarter,
+          kinds: category,
+          point: point,
+        }]
 
       const { error } = await supabase.from("Score").insert(records)
 
@@ -372,13 +372,13 @@ export default function Controller() {
                                 <Label htmlFor="category-3P">得点_3P</Label>
                               </div>
                             )}
-                            {(showAllOptions || !category || category === "assist") && (
+                            {(showAllOptions || !category || category === "steal") && (
                               <div className="flex items-center space-x-2 mb-3 w-1/2">
                                 <RadioGroupItem
-                                  value="assist"
-                                  id="category-assist"
+                                  value="steal"
+                                  id="category-steal"
                                 />
-                                <Label htmlFor="category-assist">アシスト</Label>
+                                <Label htmlFor="category-steal">ステール</Label>
                               </div>
                             )}
                             {(showAllOptions || !category || category === "point_FT") && (
@@ -391,7 +391,16 @@ export default function Controller() {
                                 <Label  htmlFor="category-FT">得点_FT</Label>
                               </div>
                             )}
-                            {(showAllOptions || !category || category === "turnover") && (
+                            {(showAllOptions || !category || category === "block") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="block"
+                                  id="category-block"
+                                />
+                                <Label htmlFor="category-block">ブロック</Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "urnover") && (
                               <div className="flex items-center space-x-2 mb-3 w-1/2">
                                 <RadioGroupItem
                                   value="turnover"
@@ -400,6 +409,15 @@ export default function Controller() {
                                 <Label htmlFor="category-turnover">
                                   ターンオーバー
                                 </Label>
+                              </div>
+                            )}
+                            {(showAllOptions || !category || category === "assist") && (
+                              <div className="flex items-center space-x-2 mb-3 w-1/2">
+                                <RadioGroupItem
+                                  value="assist"
+                                  id="category-assist"
+                                />
+                                <Label htmlFor="category-assist">アシスト</Label>
                               </div>
                             )}
                             {(showAllOptions || !category || category === "timeout") && (

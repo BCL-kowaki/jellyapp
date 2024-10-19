@@ -108,7 +108,7 @@ export default function NewTeam() {
         <div className="space-y-2">
           <Label htmlFor="area">地区</Label>
           <Select onValueChange={(value) => handleSelectChange('area', value)} value={formData.area}>
-            <SelectTrigger className="w-full bg-zinc-700 text-white">
+            <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="地区を選択" />
             </SelectTrigger>
             <SelectContent>
@@ -126,7 +126,7 @@ export default function NewTeam() {
             value={formData.prefecture}
             disabled={!formData.area}
           >
-            <SelectTrigger className="w-full bg-zinc-700 text-white">
+            <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="都道府県を選択" />
             </SelectTrigger>
             <SelectContent>
@@ -144,14 +144,14 @@ export default function NewTeam() {
             name="teamName" 
             value={formData.teamName} 
             onChange={handleInputChange} 
-            className="w-full bg-zinc-700 text-white text-2xl pt-6 pb-6 font-bold" 
+            className="w-full bg-zinc-700 text-white text-2xl pt-6 pb-6 font-normal text-base" 
           />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="category">カテゴリ</Label>
           <Select onValueChange={(value) => handleSelectChange('category', value)} value={formData.category}>
-            <SelectTrigger className="w-full bg-zinc-700 text-white">
+            <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="カテゴリを選択" />
             </SelectTrigger>
             <SelectContent>

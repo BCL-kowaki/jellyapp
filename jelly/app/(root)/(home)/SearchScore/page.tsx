@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Game {
   id: string;
   teamAId: string;
   teamBId: string;
   date: string;
+  prefecture: string;
+  area: string;
+  convention: string;
 }
 
 interface Team {
@@ -49,6 +53,9 @@ export default function SearchScore() {
   const [results, setResults] = useState<Result[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
+  const [selectedConvention, setSelectedConvention] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,29 +85,43 @@ export default function SearchScore() {
     fetchData();
   }, []);
 
+  const filteredOptions = useMemo(() => {
+    let filteredGames = games;
+
+    if (selectedArea && selectedArea !== 'all') {
+      filteredGames = filteredGames.filter(game => game.area === selectedArea);
+    }
+    if (selectedPrefecture && selectedPrefecture !== 'all') {
+      filteredGames = filteredGames.filter(game => game.prefecture === selectedPrefecture);
+    }
+    if (selectedConvention && selectedConvention !== 'all') {
+      filteredGames = filteredGames.filter(game => game.convention === selectedConvention);
+    }
+
+    const areas = Array.from(new Set(filteredGames.map(game => game.area)));
+    const prefectures = Array.from(new Set(filteredGames.map(game => game.prefecture)));
+    const conventions = Array.from(new Set(filteredGames.map(game => game.convention)));
+
+    return { areas, prefectures, conventions };
+  }, [games, selectedArea, selectedPrefecture, selectedConvention]);
+
   useEffect(() => {
     const filtered = games.filter(
       (game) =>
-        game.id.toString().includes(searchTerm) ||
-        game.teamAId
-          .toString()
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        game.teamBId
-          .toString()
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        teams
-          .find((team) => team.id === game.teamAId)
-          ?.teamName.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        teams
-          .find((team) => team.id === game.teamBId)
-          ?.teamName.toLowerCase()
-          .includes(searchTerm.toLowerCase())
+        (game.id.toString().includes(searchTerm) ||
+        game.teamAId.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.teamBId.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teams.find((team) => team.id === game.teamAId)?.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        teams.find((team) => team.id === game.teamBId)?.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.prefecture.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        game.convention.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (!selectedArea || selectedArea === 'all' || game.area === selectedArea) &&
+        (!selectedPrefecture || selectedPrefecture === 'all' || game.prefecture === selectedPrefecture) &&
+        (!selectedConvention || selectedConvention === 'all' || game.convention === selectedConvention)
     );
     setFilteredGames(filtered);
-  }, [searchTerm, games, teams]);
+  }, [searchTerm, games, teams, selectedArea, selectedPrefecture, selectedConvention]);
 
   const getResultSymbol = (gameId: string, teamId: string) => {
     const result = results.find(r => r.gameId === gameId);
@@ -122,12 +143,47 @@ export default function SearchScore() {
       <div className="relative mb-6">
         <Input
           type="text"
-          placeholder="試合ID、チーム名で検索してください"
+          placeholder="試合ID、チーム名、都道府県、エリア、大会名で検索してください"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full text-white pl-10 pr-4 py-2 rounded-lg"
+          className="w-full text-white pl-10 pr-4 py-2 rounded-lg pt-6 pb-6 text-base"
         />
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      </div>
+      <div className="flex space-x-4 mb-6">
+        <Select onValueChange={setSelectedArea}>
+          <SelectTrigger className="w-full font-normal text-base">
+            <SelectValue placeholder="エリアで絞り込み" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全てのエリア</SelectItem>
+            {filteredOptions.areas.map(area => (
+              <SelectItem key={area} value={area}>{area}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={setSelectedPrefecture}>
+          <SelectTrigger className="w-full font-normal text-base">
+            <SelectValue placeholder="都道府県で絞り込み" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全ての都道府県</SelectItem>
+            {filteredOptions.prefectures.map(prefecture => (
+              <SelectItem key={prefecture} value={prefecture}>{prefecture}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select onValueChange={setSelectedConvention}>
+          <SelectTrigger className="w-full font-normal text-base">
+            <SelectValue placeholder="大会名で絞り込み" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全ての大会</SelectItem>
+            {filteredOptions.conventions.map(convention => (
+              <SelectItem key={convention} value={convention}>{convention}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {error && <div className="text-red-500 mb-4">{error}</div>}
       <div className="space-y-4">
@@ -147,12 +203,12 @@ export default function SearchScore() {
                       <span className="text-3xl">{teamA?.teamName}</span> {getResultSymbol(game.id, game.teamAId)} {scoreA} - {scoreB} {getResultSymbol(game.id, game.teamBId)} <span className="text-3xl">{teamB?.teamName}</span>
                     </h2>
                   </div>
-                  <p className="text-xl text-gray-300 mt-9">
+                  <p className="text-lg text-gray-300 mt-11">
                     {new Date(game.date).toLocaleDateString("ja-JP", {
                       year: "numeric",
                       month: "2-digit",
                       day: "2-digit",
-                    })}
+                    })}｜ {game.prefecture} ｜{game.area} ｜{game.convention}
                   </p>
                 </CardContent>
               </Link>

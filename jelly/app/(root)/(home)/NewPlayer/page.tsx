@@ -7,13 +7,19 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createPlayer, getTeams } from './actions'
+import { createPlayer, getTeams, downloadCsvTemplate, uploadCsvPlayers } from './actions'
 
 interface FormData {
   name: string;
@@ -129,10 +135,73 @@ export default function NewPlayer() {
     }
   }
 
+  const handleCsvDownload = async () => {
+    try {
+      const csvContent = await downloadCsvTemplate()
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', 'player_template.csv')
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    } catch (error) {
+      console.error('CSV download error:', error)
+      setError('CSVテンプレートのダウンロード中にエラーが発生しました')
+    }
+  }
+
+  const handleCsvUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      try {
+        const formData = new FormData()
+        formData.append('csv', file)
+        const result = await uploadCsvPlayers(formData)
+        if (result.success) {
+          router.push('/SearchPlayer')
+        } else {
+          setError(result.error || 'CSVのアップロードに失敗しました')
+        }
+      } catch (error) {
+        console.error('CSV upload error:', error)
+        setError('CSVのアップロード中にエラーが発生しました')
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen text-white p-8">
       <h1 className="text-3xl font-bold mb-8">新規選手登録</h1>
       {error && <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>}
+      
+      <Accordion type="single" collapsible className="mb-8 max-w-md mx-auto">
+        <AccordionItem value="bulk-registration">
+          <AccordionTrigger>チームメンバー一括登録</AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4 max-w-md mx-auto">
+              <Button onClick={handleCsvDownload} className="w-full bg-green-600 hover:bg-green-700">
+                空のCSVテンプレートをダウンロード
+              </Button>
+              <div>
+                <Label htmlFor="csvUpload">CSVファイルをアップロード</Label>
+                <Input
+                  id="csvUpload"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCsvUpload}
+                  className="w-full bg-zinc-700 text-white"
+                />
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
       <form onSubmit={handleSubmit} className="space-y-6 max-w-md mx-auto">
         <div className="space-y-2">
           <Label htmlFor="name">氏名</Label>
@@ -141,7 +210,7 @@ export default function NewPlayer() {
             name="name" 
             value={formData.name} 
             onChange={handleInputChange} 
-            className="w-full bg-zinc-700 text-white" 
+            className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base" 
             required
           />
         </div>
@@ -149,7 +218,7 @@ export default function NewPlayer() {
         <div className="space-y-2">
           <Label htmlFor="category">カテゴリ</Label>
           <Select onValueChange={handleSelectChange('category')} value={formData.category}>
-            <SelectTrigger className="w-full bg-zinc-700 text-white">
+            <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="カテゴリを選択" />
             </SelectTrigger>
             <SelectContent>
@@ -169,7 +238,7 @@ export default function NewPlayer() {
             type="number" 
             value={formData.number} 
             onChange={handleInputChange} 
-            className="w-full bg-zinc-700 text-white" 
+            className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base" 
             required
           />
         </div>
@@ -177,7 +246,7 @@ export default function NewPlayer() {
         <div className="space-y-2">
           <Label htmlFor="position">ポジション</Label>
           <Select onValueChange={handleSelectChange('position')} value={formData.position}>
-            <SelectTrigger className="w-full bg-zinc-700 text-white">
+            <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="ポジションを選択" />
             </SelectTrigger>
             <SelectContent>
@@ -198,7 +267,7 @@ export default function NewPlayer() {
             type="number" 
             value={formData.height} 
             onChange={handleInputChange} 
-            className="w-full bg-zinc-700 text-white" 
+            className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base" 
             placeholder="cm"
             required
           />
@@ -212,7 +281,7 @@ export default function NewPlayer() {
               name="teamName" 
               value={formData.teamName} 
               onChange={handleInputChange} 
-              className="w-full bg-zinc-700 text-white" 
+              className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base" 
               placeholder="チーム名を入力"
               required
             />

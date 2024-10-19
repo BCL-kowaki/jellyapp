@@ -39,7 +39,7 @@ const HomeMenu = () => {
       </Link>
       <Link href="/NewTeam">
       <HomeCard 
-      img="/icons/recordings.svg"
+      img="/icons/join-team.svg"
       title="チーム登録"
       description="新しいチームを登録する"
       // handleClick={() => setMeetingState('isJoiningMeeting')}

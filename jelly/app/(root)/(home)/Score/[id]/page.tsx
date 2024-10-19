@@ -41,12 +41,12 @@ type Player = {
   name: string;
   No: number;
   position: string;
-  points: number;
-  fouls: number;
-  game: string;
-  assist: number;
-  rebound: number;
-  turnover: number;
+  points?: number;
+  fouls?: number;
+  game?: string;
+  assist?: number;
+  rebound?: number;
+  turnover?: number;
 };
 
 type ScoreData = {
@@ -62,7 +62,7 @@ type ResultData = {
   loseTeam: number;
 };
 
-export default function Score() {
+export default function Component() {
   const params = useParams();
   const gameId = params.id as string;
   const [gameDate, setGameDate] = useState<string>('')
@@ -71,8 +71,8 @@ export default function Score() {
   const [teamBData, setTeamBData] = useState<TeamData | null>(null)
   const [processedPlayerDataA, setProcessedPlayerDataA] = useState<Player[]>([])
   const [processedPlayerDataB, setProcessedPlayerDataB] = useState<Player[]>([])
-  const [teamAScore, setTeamAScore] = useState<number>()
-  const [teamBScore, setTeamBScore] = useState<number>()
+  const [teamAScore, setTeamAScore] = useState<number>(0)
+  const [teamBScore, setTeamBScore] = useState<number>(0)
   const [resultData, setResultData] = useState<ResultData | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -84,10 +84,13 @@ export default function Score() {
         .from('Game')
         .select('id, teamAId, teamBId, date')
         .eq('id', gameId)
-        .single() as { data: GameData | null, error: PostgrestError | null };
+        .maybeSingle();
 
       if (gameError) throw gameError;
-      if (!fetchedGameData) throw new Error('No game data found');
+      if (!fetchedGameData) {
+        console.error('No game data found');
+        return;
+      }
 
       setGameData(fetchedGameData);
       setGameDate(format(new Date(fetchedGameData.date), 'yyyy/MM/dd'));
@@ -96,7 +99,7 @@ export default function Score() {
       const { data: teamData, error: teamError } = await supabase
         .from('Team')
         .select('id, teamName')
-        .in('id', [fetchedGameData.teamAId, fetchedGameData.teamBId]) as { data: TeamData[] | null, error: PostgrestError | null };
+        .in('id', [fetchedGameData.teamAId, fetchedGameData.teamBId]);
 
       if (teamError) throw teamError;
 
@@ -107,23 +110,32 @@ export default function Score() {
 
       // Fetch player data
       const fetchPlayerData = async (teamId: number) => {
+        console.log(`Fetching players for team ID: ${teamId}`);
         const { data: playerData, error: playerError } = await supabase
           .from('Player')
           .select('id, No, name, position')
-          .eq('teamId', teamId) as { data: Player[] | null, error: PostgrestError | null };
+          .eq('teamId', teamId);
 
-        if (playerError) throw playerError;
+        if (playerError) {
+          console.error(`Error fetching players for team ${teamId}:`, playerError);
+          throw playerError;
+        }
+
+        console.log(`Players fetched for team ${teamId}:`, playerData);
         return playerData || [];
       };
 
       const playerDataA = await fetchPlayerData(fetchedGameData.teamAId);
       const playerDataB = await fetchPlayerData(fetchedGameData.teamBId);
 
+      console.log('Player data A:', playerDataA);
+      console.log('Player data B:', playerDataB);
+
       // Fetch score data
       const { data: scoreData, error: scoreError } = await supabase
         .from('Score')
         .select('playerId, kinds, point, teamId')
-        .eq('gameId', gameId) as { data: ScoreData[] | null, error: PostgrestError | null };
+        .eq('gameId', gameId);
 
       if (scoreError) throw scoreError;
 
@@ -132,13 +144,14 @@ export default function Score() {
         .from('Results')
         .select('gameId, winTeam, loseTeam')
         .eq('gameId', gameId)
-        .single() as { data: ResultData | null, error: PostgrestError | null };
+        .maybeSingle();
 
       if (resultError) throw resultError;
       setResultData(resultData);
 
       // Process player data and calculate team scores
       const processPlayerData = (playerData: Player[], teamId: number): Player[] => {
+        console.log(`Processing player data for team ${teamId}:`, playerData);
         let teamScore = 0;
         const processedData = playerData.map(player => {
           const playerScores = scoreData?.filter(score => score.playerId === player.id) || []
@@ -162,16 +175,21 @@ export default function Score() {
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
           return { ...player, points, fouls, game, assist, rebound, turnover }
         })
-        if (teamId === fetchedGameData.teamAId) {
-          setTeamAScore(teamScore);
-        } else {
-          setTeamBScore(teamScore);
-        }
+        console.log(`Processed player data for team ${teamId}:`, processedData);
         return processedData;
       }
 
-      setProcessedPlayerDataA(processPlayerData(playerDataA, fetchedGameData.teamAId));
-      setProcessedPlayerDataB(processPlayerData(playerDataB, fetchedGameData.teamBId));
+      const processedDataA = processPlayerData(playerDataA, fetchedGameData.teamAId);
+      const processedDataB = processPlayerData(playerDataB, fetchedGameData.teamBId);
+
+      setProcessedPlayerDataA(processedDataA);
+      setProcessedPlayerDataB(processedDataB);
+
+      // Calculate and set team scores
+      const teamAScore = processedDataA.reduce((sum, player) => sum + (player.points || 0), 0);
+      const teamBScore = processedDataB.reduce((sum, player) => sum + (player.points || 0), 0);
+      setTeamAScore(teamAScore);
+      setTeamBScore(teamBScore);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -213,52 +231,55 @@ export default function Score() {
     return '';
   };
 
-  const renderTeamTable = (teamName: string, teamId: number, playerData: Player[]) => (
-    <Card className='size-full'>      
-      <div className="mb-8">
-        <CardHeader className="px-7">
-          <CardTitle>
-            {teamName}
-          </CardTitle>
-          <CardDescription>
-            TeamID: {teamId}
-          </CardDescription>
-        </CardHeader> 
-        <CardContent>
-          <Table>
-            <TableHeader className="text-white text-xs">
-              <TableRow>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">No</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">G</TableHead>
-                <TableHead className="hidden w-3/12 sm:table-cell text-center">NAME</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">PS</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">PT</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">AS</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">RB</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">PF</TableHead>
-                <TableHead className="hidden w-1/12 sm:table-cell text-center">TO</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="text-ms text-white">
-              {playerData.map(player => (
-                <TableRow key={player.id}>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">#{player.No}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.game}</TableCell>
-                  <TableCell className="hidden w-3/12 sm:table-cell text-center">{player.name}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.position}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.points}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.assist}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.rebound}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.fouls}</TableCell>
-                  <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.turnover}</TableCell>
+  const renderTeamTable = (teamName: string, teamId: number, playerData: Player[]) => {
+    console.log(`Rendering team table for ${teamName} (ID: ${teamId})`, playerData);
+    return (
+      <Card className='size-full'>      
+        <div className="mb-8">
+          <CardHeader className="px-7">
+            <CardTitle>
+              {teamName}
+            </CardTitle>
+            <CardDescription>
+              TeamID: {teamId}
+            </CardDescription>
+          </CardHeader> 
+          <CardContent>
+            <Table>
+              <TableHeader className="text-white text-xs">
+                <TableRow>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">No</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">G</TableHead>
+                  <TableHead className="hidden w-3/12 sm:table-cell text-center">NAME</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">PS</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">PT</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">AS</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">RB</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">PF</TableHead>
+                  <TableHead className="hidden w-1/12 sm:table-cell text-center">TO</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </div>
-    </Card>
-  )
+              </TableHeader>
+              <TableBody className="text-ms text-white">
+                {playerData.map(player => (
+                  <TableRow key={player.id}>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">#{player.No}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.game}</TableCell>
+                    <TableCell className="hidden w-3/12 sm:table-cell text-center">{player.name}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.position}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.points}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.assist}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.rebound}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.fouls}</TableCell>
+                    <TableCell className="hidden w-1/12 sm:table-cell text-center">{player.turnover}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <section className="flex h-screen text-white">
@@ -295,8 +316,9 @@ export default function Score() {
               </div>
             </section>
             <section className="flex text-white gap-5">
-              {teamAData && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
-              {teamBData && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
+              {teamAData && processedPlayerDataA.length > 0 && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
+              
+              {teamBData && processedPlayerDataB.length > 0 && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
             </section>
           </div>
         </div>
