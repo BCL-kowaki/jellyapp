@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { format } from 'date-fns'
 import styles from "./style.module.scss"
-import { createClient, PostgrestError } from '@supabase/supabase-js'
+import { createClient} from '@supabase/supabase-js'
 import { useParams } from 'next/navigation'
 import { Card, CardDescription, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -47,13 +47,6 @@ type Player = {
   assist?: number;
   rebound?: number;
   turnover?: number;
-};
-
-type ScoreData = {
-  playerId: number;
-  kinds: string;
-  point: number;
-  teamId: number;
 };
 
 type ResultData = {
@@ -152,13 +145,11 @@ export default function Component() {
       // Process player data and calculate team scores
       const processPlayerData = (playerData: Player[], teamId: number): Player[] => {
         console.log(`Processing player data for team ${teamId}:`, playerData);
-        let teamScore = 0;
         const processedData = playerData.map(player => {
           const playerScores = scoreData?.filter(score => score.playerId === player.id) || []
           const points = playerScores
             .filter(score => ['point_2P', 'point_3P', 'point_1P'].includes(score.kinds))
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
-          teamScore += points;
           const fouls = playerScores
             .filter(score => score.kinds === 'foul')
             .reduce((sum, score) => sum + (typeof score.point === 'number' ? score.point : 0), 0)
@@ -329,7 +320,7 @@ export default function Component() {
       >
         <ClipboardList className="h-6 w-6 text-white" />
       </button>
-      <aside className={`fixed top-0 right-0 bg-dark-1 h-full overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-2/5' : 'w-0'}`}>
+      <aside className={`fixed top-0 right-0  bg-dark-1 h-full overflow-y-auto transition-all duration-300 ${sidebarOpen ? 'w-2/5' : 'w-0'}`}>
         <div className="p-8">
           <ScoreLog />
         </div>
