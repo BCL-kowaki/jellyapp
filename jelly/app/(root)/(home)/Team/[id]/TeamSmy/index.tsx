@@ -212,10 +212,10 @@ export default function TeamSmy() {
       <section className={styles.topContent__inner}>
         <div className={`${styles.topContent__inner__img} w-[150px] h-[150px] overflow-hidden rounded-full`}>
           <Image
-            src={teamData.image ? `/images/team/${teamData.image}` : '/placeholder.png'}
+            src={teamData.image ? `/images/team/${teamData.image}` : '/default-player.png'}
             alt={`${teamData.teamName}のアイコン`}
-            width={150}
-            height={150}
+            width={200}
+            height={200}
             className="object-cover w-full h-full"
           />
         </div>
@@ -236,11 +236,11 @@ export default function TeamSmy() {
 
             <div className={styles.topContent__inner__smy__data__border}></div>
             <div className={styles.topContent__inner__smy__data__flexSmy}>
-              <dl><dt>得点</dt><dd>{calculateAverage(teamData.pointsScored)}</dd></dl>  
-              <dl><dt>失点</dt><dd>{calculateAverage(teamData.pointsConceded)}</dd></dl> 
-              <dl><dt>アシスト</dt><dd>{calculateAverage(teamData.assists)}</dd></dl>  
-              <dl><dt>リバウンド</dt><dd>{calculateAverage(teamData.rebounds)}</dd></dl>
-              <dl><dt>ターンオーバー</dt><dd>{calculateAverage(teamData.turnovers)}</dd></dl>
+              <dl><dt>PTS</dt><dd>{calculateAverage(teamData.pointsScored)}</dd></dl>  
+              <dl><dt>CPT</dt><dd>{calculateAverage(teamData.pointsConceded)}</dd></dl> 
+              <dl><dt>AST</dt><dd>{calculateAverage(teamData.assists)}</dd></dl>  
+              <dl><dt>RBD</dt><dd>{calculateAverage(teamData.rebounds)}</dd></dl>
+              <dl><dt>OT</dt><dd>{calculateAverage(teamData.turnovers)}</dd></dl>
             </div>
           </div>
         </div>

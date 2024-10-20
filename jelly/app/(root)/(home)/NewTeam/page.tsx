@@ -37,6 +37,7 @@ const regionToPrefectures = {
 export default function NewTeam() {
   const router = useRouter()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [formData, setFormData] = useState<FormData>({
     area: '',
     prefecture: '',
@@ -45,6 +46,7 @@ export default function NewTeam() {
   })
   const [availablePrefectures, setAvailablePrefectures] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -62,6 +64,7 @@ export default function NewTeam() {
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
@@ -73,6 +76,7 @@ export default function NewTeam() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
     try {
       const form = new FormData()
@@ -80,22 +84,19 @@ export default function NewTeam() {
       form.append('prefecture', formData.prefecture)
       form.append('teamName', formData.teamName)
       form.append('category', formData.category)
-      if (imagePreview) {
-        const response = await fetch(imagePreview)
-        const blob = await response.blob()
-        form.append('image', blob, 'image.jpg')
+      if (imageFile) {
+        form.append('image', imageFile)
       }
       
       const result = await createTeam(form)
       if (result.success) {
         router.push('/SearchTeam')
       } else {
-        console.error('チーム作成エラー:', result.error)
-        alert('チームの作成に失敗しました: ' + result.error)
+        setError(result.error || 'チームの作成に失敗しました')
       }
     } catch (error) {
       console.error('送信エラー:', error)
-      alert('送信中にエラーが発生しました')
+      setError('送信中にエラーが発生しました: ' + (error instanceof Error ? error.message : '不明なエラー'))
     } finally {
       setIsSubmitting(false)
     }
@@ -172,21 +173,28 @@ export default function NewTeam() {
               ) : (
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <svg className="w-8 h-8 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                   </svg>
                   <p className="mb-2 text-sm text-gray-400"><span className="font-semibold">クリックしてアップロード</span></p>
                   <p className="text-xs text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
                 </div>
               )}
-              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="images/team/*" />
+              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
             </label>
           </div>
         </div>
+
+        {error && (
+          <div className="bg-red-500 text-white p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
 
         <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
           {isSubmitting ? '登録中...' : '登録'}
         </Button>
       </form>
+    
     </div>
   )
 }

@@ -1,109 +1,113 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Search } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect, useMemo } from "react"
+import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Search } from "lucide-react"
+import { createClient } from "@supabase/supabase-js"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Game {
-  id: string;
-  teamAId: string;
-  teamBId: string;
-  date: string;
-  prefecture: string;
-  area: string;
-  convention: string;
+  id: string
+  teamAId: string
+  teamBId: string
+  date: string
+  prefecture: string
+  area: string
+  convention: string
 }
 
 interface Team {
-  id: string;
-  teamName: string;
+  id: string
+  teamName: string
 }
 
 interface Result {
-  gameId: string;
-  winTeam: string;
-  loseTeam: string;
+  gameId: string
+  winTeam: string
+  loseTeam: string
 }
 
 interface Score {
-  gameId: string;
-  teamId: string;
-  kinds: string;
-  point: number;
+  gameId: string
+  teamId: string
+  kinds: string
+  point: number
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
+  throw new Error("Missing Supabase environment variables")
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export default function SearchScore() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [games, setGames] = useState<Game[]>([]);
-  const [filteredGames, setFilteredGames] = useState<Game[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [results, setResults] = useState<Result[]>([]);
-  const [scores, setScores] = useState<Score[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
-  const [selectedConvention, setSelectedConvention] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("")
+  const [games, setGames] = useState<Game[]>([])
+  const [filteredGames, setFilteredGames] = useState<Game[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
+  const [results, setResults] = useState<Result[]>([])
+  const [scores, setScores] = useState<Score[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+  const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null)
+  const [selectedConvention, setSelectedConvention] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true)
       try {
         const [gamesResponse, teamsResponse, resultsResponse, scoresResponse] = await Promise.all([
           supabase.from("Game").select("*"),
           supabase.from("Team").select("*"),
           supabase.from("Results").select("*"),
           supabase.from("Score").select("*")
-        ]);
+        ])
 
-        if (gamesResponse.error) throw gamesResponse.error;
-        if (teamsResponse.error) throw teamsResponse.error;
-        if (resultsResponse.error) throw resultsResponse.error;
-        if (scoresResponse.error) throw scoresResponse.error;
+        if (gamesResponse.error) throw gamesResponse.error
+        if (teamsResponse.error) throw teamsResponse.error
+        if (resultsResponse.error) throw resultsResponse.error
+        if (scoresResponse.error) throw scoresResponse.error
 
-        setGames(gamesResponse.data || []);
-        setTeams(teamsResponse.data || []);
-        setResults(resultsResponse.data || []);
-        setScores(scoresResponse.data || []);
+        setGames(gamesResponse.data || [])
+        setTeams(teamsResponse.data || [])
+        setResults(resultsResponse.data || [])
+        setScores(scoresResponse.data || [])
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("データの取得中にエラーが発生しました。");
+        console.error("Error fetching data:", error)
+        setError("データの取得中にエラーが発生しました。")
+      } finally {
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
 
   const filteredOptions = useMemo(() => {
-    let filteredGames = games;
+    let filteredGames = games
 
     if (selectedArea && selectedArea !== 'all') {
-      filteredGames = filteredGames.filter(game => game.area === selectedArea);
+      filteredGames = filteredGames.filter(game => game.area === selectedArea)
     }
     if (selectedPrefecture && selectedPrefecture !== 'all') {
-      filteredGames = filteredGames.filter(game => game.prefecture === selectedPrefecture);
+      filteredGames = filteredGames.filter(game => game.prefecture === selectedPrefecture)
     }
     if (selectedConvention && selectedConvention !== 'all') {
-      filteredGames = filteredGames.filter(game => game.convention === selectedConvention);
+      filteredGames = filteredGames.filter(game => game.convention === selectedConvention)
     }
 
-    const areas = Array.from(new Set(filteredGames.map(game => game.area)));
-    const prefectures = Array.from(new Set(filteredGames.map(game => game.prefecture)));
-    const conventions = Array.from(new Set(filteredGames.map(game => game.convention)));
+    const areas = Array.from(new Set(filteredGames.map(game => game.area)))
+    const prefectures = Array.from(new Set(filteredGames.map(game => game.prefecture)))
+    const conventions = Array.from(new Set(filteredGames.map(game => game.convention)))
 
-    return { areas, prefectures, conventions };
-  }, [games, selectedArea, selectedPrefecture, selectedConvention]);
+    return { areas, prefectures, conventions }
+  }, [games, selectedArea, selectedPrefecture, selectedConvention])
 
   useEffect(() => {
     const filtered = games.filter(
@@ -119,23 +123,31 @@ export default function SearchScore() {
         (!selectedArea || selectedArea === 'all' || game.area === selectedArea) &&
         (!selectedPrefecture || selectedPrefecture === 'all' || game.prefecture === selectedPrefecture) &&
         (!selectedConvention || selectedConvention === 'all' || game.convention === selectedConvention)
-    );
-    setFilteredGames(filtered);
-  }, [searchTerm, games, teams, selectedArea, selectedPrefecture, selectedConvention]);
+    )
+    setFilteredGames(filtered)
+  }, [searchTerm, games, teams, selectedArea, selectedPrefecture, selectedConvention])
 
   const getResultSymbol = (gameId: string, teamId: string) => {
-    const result = results.find(r => r.gameId === gameId);
-    if (!result) return "";
-    if (result.winTeam === teamId) return "⚪︎";
-    if (result.loseTeam === teamId) return "⚫︎";
-    return "";
-  };
+    const result = results.find(r => r.gameId === gameId)
+    if (!result) return ""
+    if (result.winTeam === teamId) return "⚪︎"
+    if (result.loseTeam === teamId) return "⚫︎"
+    return ""
+  }
 
   const calculateTotalScore = (gameId: string, teamId: string) => {
     return scores
       .filter(s => s.gameId === gameId && s.teamId === teamId && ['point_2P', 'point_3P', 'point_1P'].includes(s.kinds))
-      .reduce((total, score) => total + score.point, 0);
-  };
+      .reduce((total, score) => total + score.point, 0)
+  }
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen text-white">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-red-500">{error}</div>
+  }
 
   return (
     <div className="min-h-screen text-white p-8 contentInner">
@@ -185,13 +197,12 @@ export default function SearchScore() {
           </SelectContent>
         </Select>
       </div>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
       <div className="space-y-4">
         {filteredGames.map((game) => {
-          const teamA = teams.find((team) => team.id === game.teamAId);
-          const teamB = teams.find((team) => team.id === game.teamBId);
-          const scoreA = calculateTotalScore(game.id, game.teamAId);
-          const scoreB = calculateTotalScore(game.id, game.teamBId);
+          const teamA = teams.find((team) => team.id === game.teamAId)
+          const teamB = teams.find((team) => team.id === game.teamBId)
+          const scoreA = calculateTotalScore(game.id, game.teamAId)
+          const scoreB = calculateTotalScore(game.id, game.teamBId)
 
           return (
             <Card key={game.id} className="bg-gray-700">
@@ -213,9 +224,9 @@ export default function SearchScore() {
                 </CardContent>
               </Link>
             </Card>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

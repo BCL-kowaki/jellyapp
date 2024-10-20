@@ -17,7 +17,7 @@ export const sidebarLinks = [
     {
         label: 'Ranking',
         route: '/Ranking',
-        imgUrl: '/icons/player.svg',
+        imgUrl: '/icons/flag.svg',
     },
     {
         label: 'Score',

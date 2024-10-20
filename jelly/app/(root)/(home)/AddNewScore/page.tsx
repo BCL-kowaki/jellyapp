@@ -63,6 +63,7 @@ export default function AddNewScore() {
     teamB: false
   })
   const [conventions, setConventions] = useState<string[]>([])
+  const [isCustomConvention, setIsCustomConvention] = useState(false)
 
   const fetchTeamName = async (id: string, team: 'teamA' | 'teamB') => {
     setIsLoading(prev => ({ ...prev, [team]: true }))
@@ -77,7 +78,7 @@ export default function AddNewScore() {
 
       setTeamNames(prev => ({ ...prev, [team]: data?.teamName || 'チームが見つかりません' }))
     } catch (error) {
-      console.error(`Error fetching ${team} name:`, error)
+      console.error(`${team}名の取得エラー:`, error)
       setTeamNames(prev => ({ ...prev, [team]: 'エラーが発生しました' }))
     } finally {
       setIsLoading(prev => ({ ...prev, [team]: false }))
@@ -102,7 +103,7 @@ export default function AddNewScore() {
           .eq('prefecture', formData.prefecture)
         
         if (error) {
-          console.error('Error fetching conventions:', error)
+          console.error('大会名取得エラー:', error)
         } else {
           const uniqueConventions = Array.from(new Set(data.map(item => item.convention)))
           setConventions(uniqueConventions)
@@ -128,15 +129,27 @@ export default function AddNewScore() {
   }
 
   const handleAreaChange = (value: string) => {
-    setFormData(prev => ({ ...prev, area: value, prefecture: '' }))
+    setFormData(prev => ({ ...prev, area: value, prefecture: '', convention: '' }))
+    setIsCustomConvention(false)
   }
 
   const handlePrefectureChange = (value: string) => {
-    setFormData(prev => ({ ...prev, prefecture: value }))
+    setFormData(prev => ({ ...prev, prefecture: value, convention: '' }))
+    setIsCustomConvention(false)
   }
 
   const handleConventionChange = (value: string) => {
-    setFormData(prev => ({ ...prev, convention: value }))
+    if (value === 'custom') {
+      setIsCustomConvention(true)
+      setFormData(prev => ({ ...prev, convention: '' }))
+    } else {
+      setIsCustomConvention(false)
+      setFormData(prev => ({ ...prev, convention: value }))
+    }
+  }
+
+  const handleCustomConventionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, convention: e.target.value }))
   }
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -150,16 +163,16 @@ export default function AddNewScore() {
     }
 
     try {
-      const form = new FormData()
-      form.append('teamAId', formData.teamAId)
-      form.append('teamBId', formData.teamBId)
-      form.append('date', formData.date.toISOString())
-      form.append('official', formData.official.toString())
-      form.append('area', formData.area)
-      form.append('prefecture', formData.prefecture)
-      form.append('convention', formData.convention)
+      const result = await createGame({
+        teamAId: formData.teamAId,
+        teamBId: formData.teamBId,
+        date: formData.date.toISOString(),
+        official: formData.official,
+        area: formData.area,
+        prefecture: formData.prefecture,
+        convention: formData.convention
+      })
 
-      const result = await createGame(form)
       if (result.success) {
         router.push('/SearchScore')
       } else {
@@ -215,7 +228,7 @@ export default function AddNewScore() {
 
         <div className="space-y-2">
           <Label htmlFor="area">エリア</Label>
-          <Select onValueChange={handleAreaChange}>
+          <Select onValueChange={handleAreaChange} value={formData.area}>
             <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="エリアを選択" />
             </SelectTrigger>
@@ -229,7 +242,7 @@ export default function AddNewScore() {
 
         <div className="space-y-2">
           <Label htmlFor="prefecture">都道府県</Label>
-          <Select onValueChange={handlePrefectureChange} disabled={!formData.area}>
+          <Select onValueChange={handlePrefectureChange} value={formData.prefecture} disabled={!formData.area}>
             <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="都道府県を選択" />
             </SelectTrigger>
@@ -243,7 +256,7 @@ export default function AddNewScore() {
 
         <div className="space-y-2">
           <Label htmlFor="convention">大会名</Label>
-          <Select onValueChange={handleConventionChange}>
+          <Select onValueChange={handleConventionChange} value={isCustomConvention ? 'custom' : formData.convention}>
             <SelectTrigger className="w-full bg-zinc-700 text-white pt-6 pb-6 font-normal text-base">
               <SelectValue placeholder="大会名を選択または入力" />
             </SelectTrigger>
@@ -254,11 +267,11 @@ export default function AddNewScore() {
               <SelectItem value="custom">新しい大会名を入力</SelectItem>
             </SelectContent>
           </Select>
-          {formData.convention === 'custom' && (
+          {isCustomConvention && (
             <Input
               name="convention"
               value={formData.convention}
-              onChange={handleInputChange}
+              onChange={handleCustomConventionChange}
               placeholder="新しい大会名を入力"
               className="bg-zinc-700 text-white mt-2 pt-6 pb-6 font-normal text-base"
             />

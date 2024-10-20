@@ -11,19 +11,20 @@
     justify-content: flex-start;
 
     &__img{
-    width: 150px;
-    height: 150px;
-    border-radius: 150px;
+    width: 200px;
+    height: 200px;
+    border-radius: 200px;
     background: #000;
-    margin: 0 100px 0 0;
+    margin: 0 50px 0 0;
     }
 
         &__smy{
         width: 80%;
 
           &__team{
-          font-size: 20px;
-          margin: 20px 0;
+          font-size: 32px;
+          font-weight: 900;
+          margin: 20px 0 0 0;
           }
 
           &__data{
@@ -36,26 +37,26 @@
 
                   &__wl{
                       p{
-                      font-size: 12px;
+                      font-size: 20px;
                       font-weight: 900;
                       }
 
                       span{
-                      font-size: 24px;
-                      margin: auto 3px;
+                      font-size: 48px;
+                      margin: auto 5px;
                       }
                   }
 
                   &__category{
-                  font-size: 12px;
-                  padding: 0 40px;
+                  font-size: 18px;
+                  padding: 0 20px 0  0;
                   position: relative;
-                  bottom: 0;
+                  top:  16px;
 
                     p{
-                    font-size: 12px;
+                    font-size: 18px;
                     position: relative;
-                    top: 10px;
+                    top: 17px;
                     }
                   }
               }
@@ -76,14 +77,14 @@
                         justify-content: flex-start;
 
                                 dt{
-                                font-size: 12px;
+                                font-size: 18px;
                                 margin-right: 10px;
                                 position: relative;
-                                top: 5px;
+                                top: 14px;
                                 }
 
                                 dd{
-                                font-size: 18px;
+                                font-size: 32px;
                                 font-weight: 900;
                                 }
                         }

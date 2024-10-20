@@ -76,12 +76,21 @@ export default function Component() {
     setIsLoading(true)
     setError(null)
     try {
+      if (!gameId) {
+        throw new Error('Invalid game ID');
+      }
+
+      console.log('Fetching data for gameId:', gameId);
+
       // Fetch game data
       const { data: fetchedGameData, error: gameError } = await supabase
         .from('Game')
         .select('id, teamAId, teamBId, date')
         .eq('id', gameId)
         .single();
+
+      console.log('Fetched game data:', fetchedGameData);
+      console.log('Game error:', gameError);
 
       if (gameError) throw gameError;
       if (!fetchedGameData) {
@@ -135,15 +144,23 @@ export default function Component() {
 
       if (scoreError) throw scoreError;
 
-      // Fetch result data
+      // Fetch result data (修正箇所)
       const { data: resultData, error: resultError } = await supabase
         .from('Results')
         .select('gameId, winTeam, loseTeam')
-        .eq('gameId', gameId)
-        .single();
+        .eq('gameId', gameId);
 
-      if (resultError) throw resultError;
-      setResultData(resultData);
+      console.log('Fetched result data:', resultData);
+      console.log('Result error:', resultError);
+
+      if (resultError) {
+        console.error('Error fetching result data:', resultError);
+      } else if (resultData && resultData.length > 0) {
+        setResultData(resultData[0]);
+      } else {
+        console.log('No result data found for this game');
+        setResultData(null);
+      }
 
       // Process player data and calculate team scores
       const processPlayerData = (playerData: Player[], teamId: number): Player[] => {
@@ -187,7 +204,11 @@ export default function Component() {
 
     } catch (error) {
       console.error('Error fetching data:', error);
-      setError('データの取得中にエラーが発生しました。');
+      if (error instanceof Error) {
+        setError(`データの取得中にエラーが発生しました: ${error.message}`);
+      } else {
+        setError('データの取得中に不明なエラーが発生しました。');
+      }
     } finally {
       setIsLoading(false)
     }
@@ -307,6 +328,7 @@ export default function Component() {
                 <Pen className="h-5 w-5" />
               </button>
             </div>
+            
             <section className="flex text-white gap-5 mt-3 mb-5">
               <div className="size-full">
                 <TotalScore key={refreshKey} />
@@ -322,9 +344,7 @@ export default function Component() {
             </section>
             <section className="flex text-white gap-5">
               {teamAData && processedPlayerDataA.length > 0 && renderTeamTable(teamAData.teamName, teamAData.id, processedPlayerDataA)}
-              
-              {teamBData && processedPlayerDataB.length > 0 && renderTeamTable(teamBData.teamName, 
-teamBData.id, processedPlayerDataB)}
+              {teamBData && processedPlayerDataB.length > 0 && renderTeamTable(teamBData.teamName, teamBData.id, processedPlayerDataB)}
             </section>
           </div>
         </div>

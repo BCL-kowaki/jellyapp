@@ -49,8 +49,10 @@ export default function NewPlayer() {
     teamName: '',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCsvSubmitting, setIsCsvSubmitting] = useState(false)
   const [teams, setTeams] = useState<Team[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
 
   useEffect(() => {
     if (formData.teamName) {
@@ -115,10 +117,10 @@ export default function NewPlayer() {
       form.append('position', formData.position)
       form.append('height', formData.height)
       form.append('teamId', formData.teamId)
-      if (imagePreview) {
-        const response = await fetch(imagePreview)
-        const blob = await response.blob()
-        form.append('image', blob, 'image.jpg')
+      
+      const imageInput = document.getElementById('image') as HTMLInputElement
+      if (imageInput && imageInput.files && imageInput.files[0]) {
+        form.append('image', imageInput.files[0])
       }
       
       const result = await createPlayer(form)
@@ -155,22 +157,37 @@ export default function NewPlayer() {
     }
   }
 
-  const handleCsvUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleCsvFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      try {
-        const formData = new FormData()
-        formData.append('csv', file)
-        const result = await uploadCsvPlayers(formData)
-        if (result.success) {
-          router.push('/SearchPlayer')
-        } else {
-          setError(result.error || 'CSVのアップロードに失敗しました')
-        }
-      } catch (error) {
-        console.error('CSV upload error:', error)
-        setError('CSVのアップロード中にエラーが発生しました')
+      setCsvFile(file)
+    }
+  }
+
+  const handleCsvSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!csvFile) {
+      setError('CSVファイルが選択されていません')
+      return
+    }
+
+    setIsCsvSubmitting(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('csv', csvFile)
+      const result = await uploadCsvPlayers(formData)
+      if (result.success) {
+        router.push('/SearchPlayer')
+      } else {
+        setError(result.error || 'CSVのアップロードに失敗しました')
       }
+    } catch (error) {
+      console.error('CSV upload error:', error)
+      setError('CSVのアップロード中にエラーが発生しました')
+    } finally {
+      setIsCsvSubmitting(false)
     }
   }
 
@@ -187,16 +204,25 @@ export default function NewPlayer() {
               <Button onClick={handleCsvDownload} className="w-full bg-green-600 hover:bg-green-700">
                 空のCSVテンプレートをダウンロード
               </Button>
-              <div>
-                <Label htmlFor="csvUpload">CSVファイルをアップロード</Label>
-                <Input
-                  id="csvUpload"
-                  type="file"
-                  accept=".csv"
-                  onChange={handleCsvUpload}
-                  className="w-full bg-zinc-700 text-white"
-                />
-              </div>
+              <form onSubmit={handleCsvSubmit}>
+                <div className="space-y-2">
+                  <Label htmlFor="csvUpload">CSVファイルをアップロード</Label>
+                  <Input
+                    id="csvUpload"
+                    type="file"
+                    accept=".csv"
+                    onChange={handleCsvFileChange}
+                    className="w-full bg-zinc-700 text-white"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
+                  disabled={isCsvSubmitting}
+                >
+                  {isCsvSubmitting ? 'アップロード中...' : 'CSVをアップロード'}
+                </Button>
+              </form>
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -316,7 +342,7 @@ export default function NewPlayer() {
                   <p className="text-xs text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
                 </div>
               )}
-              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="images/palyer/*" />
+              <input id="image" name="image" type="file" className="hidden" onChange={handleImageUpload} accept="image/*" />
             </label>
           </div>
         </div>
@@ -326,6 +352,7 @@ export default function NewPlayer() {
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
           disabled={isSubmitting}
         >
+          
           {isSubmitting ? '登録中...' : '登録'}
         </Button>
       </form>

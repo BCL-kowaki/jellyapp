@@ -12,18 +12,28 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-export async function createGame(formData: FormData) {
-  const teamAId = formData.get('teamAId') as string
-  const teamBId = formData.get('teamBId') as string
-  const date = formData.get('date') as string
+interface GameData {
+  teamAId: string
+  teamBId: string
+  date: string
+  official: boolean
+  area: string
+  prefecture: string
+  convention: string
+}
 
+export async function createGame(gameData: GameData) {
   try {
     const { data, error } = await supabase
       .from('Game')
       .insert({
-        teamAId: teamAId,
-        teamBId: teamBId,
-        date: new Date(date).toISOString()
+        teamAId: gameData.teamAId,
+        teamBId: gameData.teamBId,
+        date: new Date(gameData.date).toISOString(),
+        official: gameData.official,
+        area: gameData.area,
+        prefecture: gameData.prefecture,
+        convention: gameData.convention
       })
       .select()
 

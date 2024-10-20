@@ -1,7 +1,9 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import fs from 'fs/promises'
+import path from 'path'
+import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -12,22 +14,52 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-export async function createPlayer(formData: FormData) {
-  const name = formData.get('name') as string
-  const category = formData.get('category') as string
-  const number = parseInt(formData.get('number') as string)
-  const position = formData.get('position') as string
-  const height = parseInt(formData.get('height') as string)
-  const teamId = parseInt(formData.get('teamId') as string)
-  const image = formData.get('image') as File
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'images', 'player')
 
-  let imageBase64 = ''
-  if (image instanceof File) {
-    const imageBuffer = await image.arrayBuffer()
-    imageBase64 = Buffer.from(imageBuffer).toString('base64')
-  }
-
+async function ensureDirectoryExists() {
   try {
+    await fs.access(UPLOAD_DIR)
+  } catch {
+    await fs.mkdir(UPLOAD_DIR, { recursive: true })
+  }
+}
+
+async function getNextImageNumber() {
+  const files = await fs.readdir(UPLOAD_DIR)
+  const imageFiles = files.filter(file => file.startsWith('player-image'))
+  const numbers = imageFiles.map(file => {
+    const match = file.match(/player-image(\d+)\./)
+    return match ? parseInt(match[1]) : 0
+  })
+  const maxNumber = Math.max(...numbers, -1)
+  return (maxNumber + 1).toString().padStart(3, '0')
+}
+
+export async function createPlayer(formData: FormData) {
+  try {
+    await ensureDirectoryExists()
+
+    const name = formData.get('name') as string
+    const category = formData.get('category') as string
+    const number = parseInt(formData.get('number') as string)
+    const position = formData.get('position') as string
+    const height = parseInt(formData.get('height') as string)
+    const teamId = parseInt(formData.get('teamId') as string)
+    const image = formData.get('image') as File
+
+    let fileName = ''
+    if (image instanceof File) {
+      const fileExt = image.name.split('.').pop()
+      const nextNumber = await getNextImageNumber()
+      fileName = `player-image${nextNumber}.${fileExt}`
+      const filePath = path.join(UPLOAD_DIR, fileName)
+
+      const buffer = Buffer.from(await image.arrayBuffer())
+      await fs.writeFile(filePath, buffer)
+
+      console.log(`画像を保存しました: ${filePath}`)
+    }
+
     const { data, error } = await supabase
       .from('Player')
       .insert({
@@ -37,7 +69,7 @@ export async function createPlayer(formData: FormData) {
         position,
         height,
         teamId,
-        image: imageBase64
+        image: fileName // ファイル名のみを保存
       })
       .select()
 
@@ -95,7 +127,7 @@ export async function uploadCsvPlayers(formData: FormData) {
 
   const content = await file.text()
   const rows = content.split('\n').map(row => row.split(','))
-  
+
   // ヘッダー行をスキップ
   const players = rows.slice(1).map(row => ({
     name: row[0],
